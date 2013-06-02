@@ -1,11 +1,11 @@
-# Confide (Laravel4 Package)
+# Confide Mongo (Laravel4 Package)
 
 ![Confide Poster](https://dl.dropbox.com/u/12506137/libs_bundles/confide.png)
 
 [![Build Status](https://api.travis-ci.org/Zizaco/confide.png)](https://travis-ci.org/Zizaco/confide)
 [![ProjectStatus](http://stillmaintained.com/Zizaco/confide.png)](http://stillmaintained.com/Zizaco/confide)
 
-Confide is a authentication solution for **Laravel4** made to eliminate repetitive tasks involving the management of users: Account creation, login, logout, confirmation by e-mail, password reset, etc.
+Confide is a authentication solution for **Laravel4** using [MongoLid](https://github.com/Zizaco/mongolid-laravel) made to eliminate repetitive tasks involving the management of users: Account creation, login, logout, confirmation by e-mail, password reset, etc.
 
 Confide aims to be simple to use, quick to configure and flexible.
 
@@ -19,7 +19,7 @@ Confide aims to be simple to use, quick to configure and flexible.
 - Generate a customizable controller that handles the basic user account actions.
 - Contains a set of methods to help basic user features.
 - Integrated with the Laravel Auth component/configs.
-- Field/model validation (Powered by [Ardent](http://laravelbook.github.com/ardent "Ardent")).
+- Field/model validation.
 - Login throttling.
 - Redirecting to previous route after authentication.
 
@@ -41,14 +41,14 @@ Run the Composer update comand
 
     $ composer update
 
-In your `config/app.php` add `'Zizaco\Confide\ConfideServiceProvider'` to the end of the `$providers` array
+In your `config/app.php` add `'Zizaco\ConfideMongo\ConfideMongoServiceProvider'` to the end of the `$providers` array
 
     'providers' => array(
 
         'Illuminate\Foundation\Providers\ArtisanServiceProvider',
         'Illuminate\Auth\AuthServiceProvider',
         ...
-        'Zizaco\Confide\ConfideServiceProvider',
+        'Zizaco\Confide\ConfideMongoServiceProvider',
 
     ),
 
@@ -71,21 +71,11 @@ Set the `address` and `name` from the `from` array in `config/mail.php`. Those w
 
 ### User model
 
-Now generate the Confide migration and the reminder password table migration:
-
-    $ php artisan confide:migration
-
-It will generate the `<timestamp>_confide_setup_users_table.php` migration. You may now run it with the artisan migrate command:
-
-    $ php artisan migrate
-
-It will setup a table containing `email`, `password`, `confirmation_code` and `confirmed` fields, which are the default fields needed for Confide use. Feel free to add more fields to the database.
-
 Change your User model in `app/models/User.php` to:
 
     <?php
 
-    use Zizaco\Confide\ConfideUser;
+    use Zizaco\ConfideMongo\ConfideUser;
 
     class User extends ConfideUser {
 
@@ -111,8 +101,8 @@ Access `http://yourapp/user/create` to create your first user. Check the `app/ro
 
 **Basic setup:**
 
-1. Database connection in `config/database.php` running properly.
-2. Correct model and table names in `config/auth.php`. They will be used by Confide all the time.
+1. Mongo database connection in `config/database.php` running properly.
+2. Correct model and collection names in `config/auth.php`. They will be used by Confide all the time.
 3. `from` configuration in `config/mail.php`.
 
 **Configuration:**
@@ -128,7 +118,7 @@ Access `http://yourapp/user/create` to create your first user. Check the `app/ro
 
 ### Advanced
 
-#### Using custom table / model name
+#### Using custom collection / model name
 
 You can change the model name that will be authenticated in the `config/auth.php` file.
 Confide uses the values present in that configuration file.
@@ -188,7 +178,7 @@ To change the validation rules of the User model you can take a look at [Ardent]
 
     <?php
 
-    use Zizaco\Confide\ConfideUser;
+    use Zizaco\ConfideMongo\ConfideUser;
 
     class User extends ConfideUser {
 
@@ -202,7 +192,7 @@ To change the validation rules of the User model you can take a look at [Ardent]
 
     }
 
-Feel free to add more fields to your table and to the validation array. Then you should build your own sign-up form with the additional fields.
+Feel free to add more fields to your collection and to the validation array. Then you should build your own sign-up form with the additional fields.
 
 #### Passing additional information to the make methods
 
@@ -275,17 +265,6 @@ If you want to validate whether a route exists, the `Confide::checkAction` funct
 Currently it is used within the views to determine Non-RESTful vs RESTful routes.
 
 ## Troubleshooting
-
-__[Exception] SQLSTATE[HY000]: General error: 1364 Field 'confirmation_code' doesn't have a default value...__
-
-If you overwrite the `beforeSave()` method in your model, make sure to call `parent::beforeSave()`:
-
-    public function beforeSave( $forced = false ){
-
-        parent::beforeSave( $forced) // Don't forget this
-
-        // Your stuff
-    }
 
 __Confirmation link is not sent when user signup__
 
