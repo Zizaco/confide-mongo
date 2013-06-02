@@ -104,14 +104,14 @@ class ConfideMongoRepository implements ConfideRepository
 
         $user = $this->model();
 
-        $query = array();
+        $query = array('$or'=>array());
 
         foreach ($identityColumns as $attribute) {
             
-            if(! isset($credentials[$attribute]))
-                return null; // Return null if an identity column is missing
-
-            $query = array_merge($query, array($attribute => $credentials[$attribute]));
+            if(isset($credentials[$attribute]))
+            {
+                $query['$or'][] = array($attribute => $credentials[$attribute]);
+            }
         }
 
         return $user->first($query);
@@ -140,7 +140,7 @@ class ConfideMongoRepository implements ConfideRepository
     public function getEmailByReminderToken( $token )
     {
         $email = $this->database()->password_reminders
-            ->first(array('token'=>$token), array('email'));
+            ->findOne(array('token'=>$token), array('email'));
 
         if ($email && is_object($email))
             $email = $email->email;
@@ -174,7 +174,7 @@ class ConfideMongoRepository implements ConfideRepository
         $id = $user->_id;
 
         $this->database()->$usersCollection
-            ->update(array('_id'=>$id), array('password'=>$password));
+            ->update(array('_id'=>$id), array('$set'=>array('password'=>$password)));
         
         return true;
     }
@@ -185,7 +185,7 @@ class ConfideMongoRepository implements ConfideRepository
      * user.
      * 
      * @param  ConfideUser $user     An existent user
-     * @return boolean Success
+     * @return string Password reset token
      */
     public function forgotPassword( $user )
     {
@@ -200,7 +200,7 @@ class ConfideMongoRepository implements ConfideRepository
         $this->database()->password_reminders
             ->insert( $values );
         
-        return true;
+        return $token;
     }
 
     /**
@@ -248,7 +248,7 @@ class ConfideMongoRepository implements ConfideRepository
         $id = $user->_id;
 
         $this->database()->$usersCollection
-            ->update(array('_id'=>$id), array('confirmed'=>1));
+            ->update(array('_id'=>$id), array('$set'=>array('confirmed'=>1)));
         
         return true;
     }

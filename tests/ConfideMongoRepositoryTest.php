@@ -202,7 +202,7 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
         $database->users = $database; // The collection that should be accessed
 
         $database->shouldReceive('update') // Should update the password of the user
-            ->with(array('_id'=>'123123'), array('password'=>'secret'))
+            ->with(array('_id'=>'123123'), array('$set'=>array('password'=>'secret')))
             ->andReturn( true )
             ->once();
 
@@ -291,7 +291,7 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
         $database->users = $database; // The collection that should be accessed
 
         $database->shouldReceive('update') // Should query for the password reminders with the given token
-            ->with(array('_id'=>'123123'), array('confirmed'=>1))
+            ->with(array('_id'=>'123123'), array('$set'=>array('confirmed'=>1)))
             ->andReturn( true )
             ->once();
 

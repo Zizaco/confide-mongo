@@ -34,7 +34,7 @@ class ConfideMongoUser extends MongoLid implements UserInterface {
     public static $rules = array(
         'username' => 'required|alpha_dash',
         'email' => 'required|email',
-        'password' => 'required|between:4,11',
+        //'password' => 'required|between:4,11',
     );
 
     /**
@@ -185,6 +185,17 @@ class ConfideMongoUser extends MongoLid implements UserInterface {
      */
     public function beforeSave( $forced = false )
     {
+        /**
+         * Hash password
+         */
+        if(! isset($this->original['password']) || $this->password != $this->original['password'] )
+        {
+            $this->password = static::$app['hash']->make($this->password);
+        }
+
+        /**
+         * Generates confirmation code
+         */
         if ( empty($this->id) )
         {
             $this->confirmation_code = md5( uniqid(mt_rand(), true) );
@@ -280,6 +291,26 @@ class ConfideMongoUser extends MongoLid implements UserInterface {
         $user = static::$app['confide.repository']->getUserByIdentity($credentials, $identity_columns);
 
         if ($user) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * [Deprecated] Checks if an user is confirmed by it's credentials. Perform a 'where' within
+     * the fields contained in the $identityColumns.
+     * 
+     * @deprecated Use ConfideRepository getUserByIdentity instead.
+     * @param  array $credentials      An array containing the attributes to search for
+     * @param  mixed $identityColumns  Array of attribute names or string (for one atribute)
+     * @return boolean                 Is confirmed?
+     */
+    public function isConfirmed($credentials, $identity_columns = array('username', 'email'))
+    {
+        $user = static::$app['confide.repository']->getUserByIdentity($credentials, $identity_columns);
+
+        if (! is_null($user) and $user->confirmed) {
             return true;
         } else {
             return false;
