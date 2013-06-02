@@ -27,7 +27,7 @@ class ConfideMongoUser extends MongoLid implements UserInterface {
     protected $hidden = array('password');
 
     /**
-     * List of attribute names which should be hashed on save. (Ardent)
+     * List of attribute names which should be hashed on save.
      *
      * @var array
      */
