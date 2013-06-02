@@ -143,7 +143,13 @@ class ConfideMongoRepository implements ConfideRepository
             ->findOne(array('token'=>$token), array('email'));
 
         if ($email && is_object($email))
+        {
             $email = $email->email;
+        }
+        elseif ($email && is_array($email))
+        {
+            $email = $email['email'];
+        }
 
         return $email;
     }
