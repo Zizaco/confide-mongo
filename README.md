@@ -108,7 +108,7 @@ Access `http://yourapp/user/create` to create your first user. Check the `app/ro
 **Configuration:**
 
 1. `ConfideServiceProvider` and `ConfideFacade` entry in `config/app.php` `'providers'` and `'aliases'` respectively.
-2. User model (with the same name as in `config/auth.php`) should extend `ConfideUser` class. This will cause to methods like `resetPassword()`, `confirm()` and a overloaded `save()` to be available.
+2. User model (with the same name as in `config/auth.php`) should extend `ConfideMongoUser` class. This will cause to methods like `resetPassword()`, `confirm()` and a overloaded `save()` to be available.
 
 **Optional steps:**
 
@@ -157,9 +157,9 @@ To change the validation rules of the User model you can take a look at [Laravel
 
     <?php
 
-    use Zizaco\ConfideMongo\ConfideUser;
+    use Zizaco\ConfideMongo\ConfideMongoUser;
 
-    class User extends ConfideUser {
+    class User extends ConfideMongoUser {
 
         /**
          * Validation rules
