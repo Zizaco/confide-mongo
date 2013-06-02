@@ -247,9 +247,20 @@ Currently it is used within the views to determine Non-RESTful vs RESTful routes
 
 ## Troubleshooting
 
+__"'confirmation_code' required" when creating a user__
+
+If you overwrite the `save()` method in your model, make sure to call `parent::save()`:
+
+    public function save( $forced = false ){
+
+        parent::save( $forced) // Don't forget this
+
+        // Your stuff
+    }
+
 __Confirmation link is not sent when user signup__
 
-Same as above. If you overwrite the `afterSave()` method in your model, make sure to call `parent::afterSave()`:
+If you overwrite the `afterSave()` method in your model, make sure to call `parent::afterSave()`
 
 __Users are able to login without confirming account__
 
