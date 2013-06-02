@@ -27,6 +27,13 @@ class ConfideMongoUser extends MongoLid implements UserInterface {
     protected $hidden = array('password');
 
     /**
+     * List of attribute names which should be hashed on save. (Ardent)
+     *
+     * @var array
+     */
+    protected $hashedAttributes = array('password');
+
+    /**
      * Ardent validation rules
      *
      * @var array
@@ -34,7 +41,7 @@ class ConfideMongoUser extends MongoLid implements UserInterface {
     public static $rules = array(
         'username' => 'required|alpha_dash',
         'email' => 'required|email',
-        //'password' => 'required|between:4,11',
+        'password' => 'required|between:4,11',
     );
 
     /**
@@ -185,14 +192,6 @@ class ConfideMongoUser extends MongoLid implements UserInterface {
      */
     public function beforeSave( $forced = false )
     {
-        /**
-         * Hash password
-         */
-        if(! isset($this->original['password']) || $this->password != $this->original['password'] )
-        {
-            $this->password = static::$app['hash']->make($this->password);
-        }
-
         /**
          * Generates confirmation code
          */
