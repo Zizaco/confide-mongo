@@ -41,7 +41,7 @@ class ConfideMongoUser extends MongoLid implements UserInterface {
     public static $rules = array(
         'username' => 'required|alpha_dash',
         'email' => 'required|email',
-        'password' => 'required|between:4,11',
+        'password' => 'required|between:4,11|confirmed',
     );
 
     /**
@@ -198,15 +198,6 @@ class ConfideMongoUser extends MongoLid implements UserInterface {
         if ( empty($this->id) )
         {
             $this->confirmation_code = md5( uniqid(mt_rand(), true) );
-        }
-
-        /*
-         * Remove password_confirmation field before save to
-         * database.
-         */
-        if ( isset($this->password_confirmation) )
-        {
-            unset( $this->password_confirmation );
         }
 
         return true;
