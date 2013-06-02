@@ -1,10 +1,12 @@
 <?php namespace Zizaco\ConfideMongo;
 
+use Zizaco\Confide\ConfideRepository;
+
 /**
  * A layer that abstracts all database interactions that happens
  * in Confide
  */
-class ConfideMongoRepository
+class ConfideMongoRepository implements ConfideRepository
 {
     /**
      * Laravel application
@@ -89,7 +91,7 @@ class ConfideMongoRepository
     }
 
     /**
-     * Find a user by it's credentials. Perform a 'where' within
+     * Find a user by it's credentials. Perform a 'find' within
      * the fields contained in the $identityColumns.
      * 
      * @param  array $credentials      An array containing the attributes to search for
@@ -124,7 +126,7 @@ class ConfideMongoRepository
     public function getPasswordRemindersCount( $token )
     {
         $count = $this->database()->password_reminders
-            ->where(array('token'=>$token))->count();
+            ->find(array('token'=>$token))->count();
 
         return $count;
     }
@@ -227,7 +229,7 @@ class ConfideMongoRepository
         }
 
         $users = $this->database()->$usersCollection
-            ->where($query);
+            ->find($query);
 
         $count = $users->count();
         

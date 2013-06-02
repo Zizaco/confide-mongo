@@ -13,6 +13,13 @@ class ConfideMongoUser extends MongoLid implements UserInterface {
     protected $collection = 'users';
 
     /**
+     * Laravel application
+     *
+     * @var Illuminate\Foundation\Application
+     */
+    public static $app;
+
+    /**
      * The attributes excluded from the model's JSON form.
      *
      * @var array
@@ -141,7 +148,7 @@ class ConfideMongoUser extends MongoLid implements UserInterface {
             }
             else
             {
-                $this->validationErrors->add(
+                $this->errors()->add(
                     'duplicated',
                     static::$app['translator']->get('confide::confide.alerts.duplicated_credentials')
                 );
@@ -180,7 +187,7 @@ class ConfideMongoUser extends MongoLid implements UserInterface {
     {
         if ( empty($this->id) )
         {
-            $this->confirmation_code = $this->generateUuid($this->table, 'confirmation_code');
+            $this->confirmation_code = md5( uniqid(mt_rand(), true) );
         }
 
         /*
@@ -250,5 +257,32 @@ class ConfideMongoUser extends MongoLid implements UserInterface {
             $m->to( $user->email )
             ->subject( ConfideMongoUser::$app['translator']->get($subject_translation) );
         });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Deprecated methods
+    |--------------------------------------------------------------------------
+    |
+    */
+
+    /**
+     * [Deprecated] Checks if an user exists by it's credentials. Perform a 'where' within
+     * the fields contained in the $identityColumns.
+     * 
+     * @deprecated Use ConfideRepository getUserByIdentity instead.
+     * @param  array $credentials      An array containing the attributes to search for
+     * @param  mixed $identityColumns  Array of attribute names or string (for one atribute)
+     * @return boolean                 Exists?
+     */
+    public function checkUserExists($credentials, $identity_columns = array('username', 'email'))
+    {
+        $user = static::$app['confide.repository']->getUserByIdentity($credentials, $identity_columns);
+
+        if ($user) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

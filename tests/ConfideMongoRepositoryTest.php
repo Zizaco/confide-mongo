@@ -142,7 +142,7 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
 
         $database->password_reminders = $database; // The collection that should be accessed
 
-        $database->shouldReceive('where') // Should query for the password reminders with the given token
+        $database->shouldReceive('find') // Should query for the password reminders with the given token
             ->with(array('token'=>'456456'))
             ->andReturn( $database )
             ->once()
@@ -256,12 +256,12 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
             )
         );
 
-        // Make sure that the password reminders collection will receive a where and count
+        // Make sure that the password reminders collection will receive a find and count
         $database = $this->repo->app['MongoLidConnector'];
 
         $database->users = $database; // The collection that should be accessed
 
-        $database->shouldReceive('where') // Should query for the password reminders with the given token
+        $database->shouldReceive('find') // Should query for the password reminders with the given token
             ->with($query)
             ->andReturn( $database )
             ->once()
@@ -315,7 +315,7 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
         $confide_user->username = 'uname';
         $confide_user->password = '123123';
         $confide_user->confirmed = 0;
-        $confide_user->shouldReceive('where','get', 'orWhere','first', 'all','getUserFromCredsIdentity')
+        $confide_user->shouldReceive('find','get', 'first', 'all','getUserFromCredsIdentity')
             ->andReturn( $confide_user );
 
         return $confide_user;
