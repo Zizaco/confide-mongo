@@ -75,13 +75,13 @@ Change your User model in `app/models/User.php` to:
 
     <?php
 
-    use Zizaco\ConfideMongo\ConfideUser;
+    use Zizaco\ConfideMongo\ConfideMongoUser;
 
-    class User extends ConfideUser {
+    class User extends ConfideMongoUser {
 
     }
 
-`ConfideUser` class will take care of some behaviors of the user model.
+`ConfideMongoUser` class will take care of some behaviors of the user model.
 
 ### Dump the default acessors
 
@@ -146,35 +146,14 @@ Then edit the view names in `app/config/packages/zizaco/confide/config.php`.
 To update an user already in the database you'll want to either pass in an different rule set or use the amend function.
 
     $user = new User;
-    $user->username = 'newuser';
+    $user->username = 'newUserName';
 
     // Save
     $user->save($this->getUpdateRules());
-    // Or amend
-    $this->amend();
-
-Further if you'd like to make sure the updated user uses unique from the original rule, you'll want
-to pass in the old user and the new user to the `prepareRules` function. You can use it like this:
-
-    $oldUser = $user->find(1)->first();
-    $user = clone $oldUser;
-    $user->username = 'newuser';
-
-    $user->prepareRules($oldUser, $user);
-
-    // Save
-    $user->save($this->getUpdateRules());
-    // Or amend
-    $this->amend();
-
-This will compare the two users and where they differ set the update rule to the original unique rule.
-
-`prepareRules` also takes a third param which can be a rule set to use to update the updateRules array. By default it
-uses the rules array within the user class.
 
 #### Validate model fields
 
-To change the validation rules of the User model you can take a look at [Ardent](http://laravelbook.github.com/ardent/#validation "Ardent Validation Rulez"). For example:
+To change the validation rules of the User model you can take a look at [Laravel 4 Validations](http://laravel.com/docs/validation "Laravel Validation Rules"). For example:
 
     <?php
 
@@ -226,6 +205,8 @@ Then, when dumping the routes, you should use the --restful option to match the 
 In order not to bloat Confide with not related features, the role and permission was developed as another package: [Entrust](https://github.com/Zizaco/entrust). This package couples very well with Confide.
 
 See [Entrust](https://github.com/Zizaco/entrust)
+
+> Note: Entrust is not yet available for MongoLid / MongoDB
 
 #### Redirecting to previous route after login
 

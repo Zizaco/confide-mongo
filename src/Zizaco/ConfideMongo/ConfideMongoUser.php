@@ -42,6 +42,7 @@ class ConfideMongoUser extends MongoLid implements UserInterface {
         'username' => 'required|alpha_dash',
         'email' => 'required|email',
         'password' => 'required|between:4,11|confirmed',
+        'confirmation_code' => 'required',
     );
 
     /**
