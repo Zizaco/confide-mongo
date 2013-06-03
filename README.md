@@ -67,7 +67,19 @@ At the end of `config/app.php` add `'Confide'    => 'Zizaco\Confide\ConfideFacad
 
 ### Configuration
 
-Set the values to the `config/auth.php` as stated in [https://github.com/Zizaco/mongolid-laravel#authentication]. 
+Set the values to the `config/auth.php` as stated in (MongoLid Authentication)[https://github.com/Zizaco/mongolid-laravel#authentication]:
+
+```php
+    ...
+
+    'driver' => 'mongoLid',
+
+    ...
+
+    'model' => 'User',
+
+    ...
+```
 
 This values will be used by confide to generate the database migration and to generate controllers and routes.
 
@@ -106,12 +118,13 @@ Access `http://yourapp/user/create` to create your first user. Check the `app/ro
 **Basic setup:**
 
 1. Mongo database connection in `config/database.php` running properly.
-2. Correct model and collection names in `config/auth.php`. They will be used by Confide all the time.
-3. `from` configuration in `config/mail.php`.
+2. Set the auth driver to _"mongoLid"_ in `config/auth.php`.
+3. Check and correct the model and collection names in `config/auth.php`. They will be used by Confide all the time.
+4. `from` configuration in `config/mail.php`.
 
 **Configuration:**
 
-1. `ConfideServiceProvider` and `ConfideFacade` entry in `config/app.php` `'providers'` and `'aliases'` respectively.
+1. `ConfideMongoServiceProvider` and `ConfideFacade` entry in `config/app.php` `'providers'` and `'aliases'` respectively.
 2. User model (with the same name as in `config/auth.php`) should extend `ConfideMongoUser` class. This will cause to methods like `resetPassword()`, `confirm()` and a overloaded `save()` to be available.
 
 **Optional steps:**
