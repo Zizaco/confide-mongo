@@ -37,7 +37,7 @@ If you are looking for user roles and permissions see [Entrust](https://github.c
 
 In the `require` key of `composer.json` file add the following
 
-    "zizaco/confide": "dev-master"
+    "zizaco/confide-mongo": "dev-master"
 
 Run the Composer update comand
 
@@ -50,7 +50,7 @@ In your `config/app.php` add `'Zizaco\ConfideMongo\ConfideMongoServiceProvider'`
         'Illuminate\Foundation\Providers\ArtisanServiceProvider',
         'Illuminate\Auth\AuthServiceProvider',
         ...
-        'Zizaco\Confide\ConfideMongoServiceProvider',
+        'Zizaco\ConfideMongo\ConfideMongoServiceProvider',
 
     ),
 
