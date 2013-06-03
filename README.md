@@ -1,13 +1,15 @@
 # Confide Mongo (Laravel4 Package)
 
-![Confide Poster](https://dl.dropbox.com/u/12506137/libs_bundles/confide.png)
+![Confide Poster](https://dl.dropboxusercontent.com/u/12506137/libs_bundles/confide_mongo.png)
 
-[![Build Status](https://api.travis-ci.org/Zizaco/confide.png)](https://travis-ci.org/Zizaco/confide)
-[![ProjectStatus](http://stillmaintained.com/Zizaco/confide.png)](http://stillmaintained.com/Zizaco/confide)
+[![Build Status](https://api.travis-ci.org/Zizaco/confide-mongo.png)](https://travis-ci.org/Zizaco/confide-mongo)
+[![ProjectStatus](http://stillmaintained.com/Zizaco/confide-mongo.png)](http://stillmaintained.com/Zizaco/confide-mongo)
 
 Confide is a authentication solution for **Laravel4** using [MongoLid](https://github.com/Zizaco/mongolid-laravel) made to eliminate repetitive tasks involving the management of users: Account creation, login, logout, confirmation by e-mail, password reset, etc.
 
 Confide aims to be simple to use, quick to configure and flexible.
+
+> Note: If you are **NOT** using MongoDB check [Confide](https://github.com/Zizaco/confide).
 
 ## Features
 
