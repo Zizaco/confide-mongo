@@ -92,17 +92,22 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
         $confide_user->username = 'LoL';
 
         $confide_user->shouldReceive('first') // Should query for the model
-            ->with(array('email'=>'lol@sample.com', 'username'=>'LoL'))
+            ->with(array(
+                '$or'=>array(
+                    array('email'=>'lol@sample.com'),
+                    array('username'=>'LoL')
+                )
+            ))
             ->andReturn( $confide_user )
             ->atLeast(1)
 
             ->getMock()->shouldReceive('first') // Should query for the model
-            ->with(array('email'=>'lol@sample.com'))
+            ->with(array('$or'=>array(array('email'=>'lol@sample.com'))))
             ->andReturn( $confide_user )
             ->atLeast(1)
             
             ->getMock()->shouldReceive('first') // Should query for the model
-            ->with(array('username'=>'LoL'))
+            ->with(array('$or'=>array(array('username'=>'LoL'))))
             ->andReturn( $confide_user )
             ->atLeast(1);
 
@@ -163,7 +168,7 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
 
         $database->password_reminders = $database; // The collection that should be accessed
 
-        $database->shouldReceive('first') // Should query for the password reminders collection by the given token
+        $database->shouldReceive('findOne') // Should query for the password reminders collection by the given token
             ->with(array('token'=>'456456'), array('email'))
             ->andReturn( 'lol@sample.com' )
             ->once();
@@ -234,8 +239,8 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
 
         $this->repo->app['MongoLidConnector'] = $database;
 
-        // Actually checks if the user exists
-        $this->assertTrue(
+        // Actually checks if the token is returned
+        $this->assertNotNull(
             $this->repo->forgotPassword($confide_user)
         );
     }
