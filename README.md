@@ -67,21 +67,17 @@ At the end of `config/app.php` add `'Confide'    => 'Zizaco\Confide\ConfideFacad
 
 ### Configuration
 
-Set the values to the `config/auth.php` as stated in (MongoLid Authentication)[https://github.com/Zizaco/mongolid-laravel#authentication]:
+Set the driver to _"mongoLid"_ in `config/auth.php` as stated in [MongoLid Authentication](https://github.com/Zizaco/mongolid-laravel#authentication):
 
 ```php
     ...
 
     'driver' => 'mongoLid',
-
-    ...
-
-    'model' => 'User',
-
+    
     ...
 ```
 
-This values will be used by confide to generate the database migration and to generate controllers and routes.
+This values contained in `config/auth.php` will be used by Confide Mongo to generate the controllers and routes.
 
 Set the `address` and `name` from the `from` array in `config/mail.php`. Those will be used to send account confirmation and password reset emails to the users.
 
