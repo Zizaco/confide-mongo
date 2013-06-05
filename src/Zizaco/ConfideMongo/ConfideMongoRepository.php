@@ -67,6 +67,7 @@ class ConfideMongoRepository implements ConfideRepository
     public function confirm( $code )
     {
         $user = $this->model()->first(array('confirmation_code'=>$code));
+        
         if( $user )
         {
             return $user->confirm();

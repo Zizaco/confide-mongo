@@ -196,7 +196,7 @@ class ConfideMongoUser extends MongoLid implements UserInterface {
         /**
          * Generates confirmation code
          */
-        if ( empty($this->id) )
+        if ( empty($this->_id) )
         {
             $this->confirmation_code = md5( uniqid(mt_rand(), true) );
         }
