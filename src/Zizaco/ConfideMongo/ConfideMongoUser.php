@@ -177,7 +177,7 @@ class ConfideMongoUser extends MongoLid implements UserInterface {
     {
         $this->beforeSave($force);
 
-        $result = parent::save();
+        $result = parent::save($force);
 
         $this->afterSave($result, $force);
 
