@@ -136,7 +136,7 @@ class ConfideMongoUser extends MongoLid implements UserInterface {
 
     /**
      * Overwrites MongoLid isValid method in order to check for duplicates
-     * 
+     *
      * @return bool Is Valid?
      */
     public function isValid()
@@ -177,7 +177,7 @@ class ConfideMongoUser extends MongoLid implements UserInterface {
     {
         $this->beforeSave($force);
 
-        $result = parent::save();
+        $result = parent::save($force);
 
         $this->afterSave($result, $force);
 
@@ -271,7 +271,7 @@ class ConfideMongoUser extends MongoLid implements UserInterface {
     /**
      * [Deprecated] Checks if an user exists by it's credentials. Perform a 'where' within
      * the fields contained in the $identityColumns.
-     * 
+     *
      * @deprecated Use ConfideRepository getUserByIdentity instead.
      * @param  array $credentials      An array containing the attributes to search for
      * @param  mixed $identityColumns  Array of attribute names or string (for one atribute)
@@ -291,7 +291,7 @@ class ConfideMongoUser extends MongoLid implements UserInterface {
     /**
      * [Deprecated] Checks if an user is confirmed by it's credentials. Perform a 'where' within
      * the fields contained in the $identityColumns.
-     * 
+     *
      * @deprecated Use ConfideRepository getUserByIdentity instead.
      * @param  array $credentials      An array containing the attributes to search for
      * @param  mixed $identityColumns  Array of attribute names or string (for one atribute)
