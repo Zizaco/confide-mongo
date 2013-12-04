@@ -274,4 +274,9 @@ class ConfideMongoRepository implements ConfideRepository
 
         return $database;
     }
+    
+     public function validate(array $rules = array(), array $customMessages = array())
+    {
+        return $this->model()->validate($rules, $customMessages);
+    }
 }
