@@ -11,14 +11,14 @@
     ],
     "require": {
         "php": ">=5.3.0",
-        "illuminate/support": "4.0.x",
+        "illuminate/support": "4.*",
         "zizaco/mongolid-laravel": "*",
         "zizaco/confide": "*"
     },
     "require-dev": {
         "mockery/mockery": "0.7.2",
-        "illuminate/database": "4.0.x",
-        "illuminate/auth": "4.0.x"
+        "illuminate/database": "4.*",
+        "illuminate/auth": "4.*"
     },
     "autoload": {
         "classmap": [
