@@ -10,7 +10,7 @@ class ConfideMongoRepository implements ConfideRepository
 {
     /**
      * Laravel application
-     * 
+     *
      * @var Illuminate\Foundation\Application
      */
     public $app;
@@ -19,7 +19,7 @@ class ConfideMongoRepository implements ConfideRepository
      * Name of the model that should be used to retrieve your users.
      * You may specify an specific object. Then that object will be
      * returned when calling `model()` method.
-     * 
+     *
      * @var string
      */
     public $model;
@@ -42,7 +42,7 @@ class ConfideMongoRepository implements ConfideRepository
     public function model()
     {
         if (! $this->model)
-        {               
+        {
             $this->model = $this->app['config']->get('auth.model');
         }
 
@@ -67,7 +67,7 @@ class ConfideMongoRepository implements ConfideRepository
     public function confirm( $code )
     {
         $user = $this->model()->first(array('confirmation_code'=>$code));
-        
+
         if( $user )
         {
             return $user->confirm();
@@ -80,7 +80,7 @@ class ConfideMongoRepository implements ConfideRepository
 
     /**
      * Find a user by the given email
-     * 
+     *
      * @param  string $email The email to be used in the query
      * @return ConfideUser   User object
      */
@@ -94,7 +94,7 @@ class ConfideMongoRepository implements ConfideRepository
     /**
      * Find a user by it's credentials. Perform a 'find' within
      * the fields contained in the $identityColumns.
-     * 
+     *
      * @param  array $credentials      An array containing the attributes to search for
      * @param  mixed $identityColumns  Array of attribute names or string (for one atribute)
      * @return ConfideUser             User object
@@ -108,7 +108,7 @@ class ConfideMongoRepository implements ConfideRepository
         $query = array('$or'=>array());
 
         foreach ($identityColumns as $attribute) {
-            
+
             if(isset($credentials[$attribute]))
             {
                 $query['$or'][] = array($attribute => $credentials[$attribute]);
@@ -120,7 +120,7 @@ class ConfideMongoRepository implements ConfideRepository
 
     /**
      * Get password reminders count by the given token
-     * 
+     *
      * @param  string $token
      * @return int    Password reminders count
      */
@@ -134,7 +134,7 @@ class ConfideMongoRepository implements ConfideRepository
 
     /**
      * Get email of password reminder by the given token
-     * 
+     *
      * @param  string $token
      * @return string Email
      */
@@ -157,7 +157,7 @@ class ConfideMongoRepository implements ConfideRepository
 
     /**
      * Remove password reminder from database by the given token
-     * 
+     *
      * @param  string $token
      * @return void
      */
@@ -170,7 +170,7 @@ class ConfideMongoRepository implements ConfideRepository
     /**
      * Change the password of the given user. Make sure to hash
      * the $password before calling this method.
-     * 
+     *
      * @param  ConfideUser $user     An existent user
      * @param  string      $password The password hash to be used
      * @return boolean Success
@@ -182,7 +182,7 @@ class ConfideMongoRepository implements ConfideRepository
 
         $this->database()->$usersCollection
             ->update(array('_id'=>$id), array('$set'=>array('password'=>$password)));
-        
+
         return true;
     }
 
@@ -190,7 +190,7 @@ class ConfideMongoRepository implements ConfideRepository
      * Generate a token for password change and saves it in
      * the 'password_reminders' table with the email of the
      * user.
-     * 
+     *
      * @param  ConfideUser $user     An existent user
      * @return string Password reset token
      */
@@ -206,14 +206,14 @@ class ConfideMongoRepository implements ConfideRepository
 
         $this->database()->password_reminders
             ->insert( $values );
-        
+
         return $token;
     }
 
     /**
      * Checks if an non saved user has duplicated credentials
      * (email and/or username)
-     * 
+     *
      * @param  ConfideUser  $user The non-saved user to be checked
      * @return int          The number of duplicated entry founds. Probably 0 or 1.
      */
@@ -239,13 +239,13 @@ class ConfideMongoRepository implements ConfideRepository
             ->find($query);
 
         $count = $users->count();
-        
+
         return $count;
     }
 
     /**
      * Set the 'confirmed' column of the given user to 1
-     * 
+     *
      * @param  ConfideUser $user     An existent user
      * @return boolean Success
      */
@@ -256,14 +256,14 @@ class ConfideMongoRepository implements ConfideRepository
 
         $this->database()->$usersCollection
             ->update(array('_id'=>$id), array('$set'=>array('confirmed'=>1)));
-        
+
         return true;
     }
 
     /**
      * Returns the MongoDB database object (using the database provided
      * in the config)
-     * 
+     *
      * @return MongoDatabase
      */
     protected function database()
@@ -274,9 +274,9 @@ class ConfideMongoRepository implements ConfideRepository
 
         return $database;
     }
-    
-     public function validate(array $rules = array(), array $customMessages = array())
+
+     public function validate($user, array $rules, array $customMessages)
     {
-        return $this->model()->validate($rules, $customMessages);
+        return $user->validate($rules, $customMessages);
     }
 }
