@@ -10,23 +10,21 @@
         }
     ],
     "require": {
-        "php": ">=5.3.0",
+        "php": ">=5.5.0",
         "ext-mongo": "*",
-        "illuminate/support": "4.*",
+        "illuminate/support": "5.*",
         "zizaco/mongolid-laravel": "*",
-        "zizaco/confide": "~3.2"
+        "zizaco/confide": "*"
     },
     "require-dev": {
-        "mockery/mockery": "0.7.2",
-        "illuminate/database": "4.*",
-        "illuminate/auth": "4.*"
+        "phpunit/phpunit": "~4.3",
+        "mockery/mockery": "~0.9",
+        "illuminate/database": "5.*",
+        "illuminate/auth": "5.*"
     },
     "autoload": {
-        "classmap": [
-            "src/commands"
-        ],
-        "psr-0": {
-            "Zizaco\\ConfideMongo": "src/"
+        "psr-4": {
+            "Zizaco\\ConfideMongo\\": "src/"
         }
     },
     "minimum-stability": "dev"
