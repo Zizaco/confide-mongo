@@ -18,7 +18,7 @@ class ConfideMongoServiceProvider extends ConfideServiceProvider {
      *
      * @return void
      */
-    protected function register()
+    public function register()
     {
         $this->app->bind('confide.repository', function($app)
         {
