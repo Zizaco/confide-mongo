@@ -18,7 +18,6 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
         $app = $this->mockApp();
         $this->repo = new ConfideMongoRepository();
 
-        // Set the app attribute with mock
         $this->repo->app = $app;
     }
 
@@ -47,7 +46,7 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
         $this->assertInstanceOf('_mockedUser', $user);
     }
 
-    public function testShouldConfirm()
+    public function testShouldConfirmByCode()
     {
         // Make sure that our user will recieve confirm
         $confide_user = m::mock(new _mockedUser);
@@ -64,7 +63,7 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
         // when calling `model()` (that will occur inside `repo->confirm()`)
         $this->repo->model = $confide_user;
 
-        $this->assertTrue( $this->repo->confirm( '123123' ) );
+        $this->assertTrue( $this->repo->confirmByCode( '123123' ) );
     }
 
     public function testShouldGetByEmail()
@@ -80,7 +79,7 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
         // when calling `model()` (that will occur inside `repo->confirm()`)
         $this->repo->model = $confide_user;
 
-        $this->assertEquals( $confide_user, $this->repo->getUserByMail( 'lol@sample.com' ) );
+        $this->assertEquals( $confide_user, $this->repo->getUserByEmail( 'lol@sample.com' ) );
     }
 
     public function testShouldGetByIdentity()
@@ -403,5 +402,11 @@ class _mockedUser {
     public function getCollectionName()
     {
         return 'users';
+    }
+}
+
+if(! function_exists('app')) {
+    function app() {
+        
     }
 }
