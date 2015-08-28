@@ -1,6 +1,6 @@
 <?php namespace Zizaco\ConfideMongo;
 
-use Zizaco\Confide\ConfideServiceProvider;
+use Zizaco\Confide\ServiceProvider as ConfideServiceProvider;
 
 class ConfideMongoServiceProvider extends ConfideServiceProvider {
 
