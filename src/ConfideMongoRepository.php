@@ -1,12 +1,12 @@
 <?php namespace Zizaco\ConfideMongo;
 
-use Zizaco\Confide\ConfideRepository;
+use Zizaco\Confide\RepositoryInterface;
 
 /**
  * A layer that abstracts all database interactions that happens
  * in Confide
  */
-class ConfideMongoRepository implements ConfideRepository
+class ConfideMongoRepository implements RepositoryInterface
 {
     /**
      * Laravel application
@@ -25,7 +25,7 @@ class ConfideMongoRepository implements ConfideRepository
     public $model;
 
     /**
-     * Create a new ConfideRepository
+     * Create a new RepositoryInterface
      *
      * @return void
      */
@@ -64,7 +64,7 @@ class ConfideMongoRepository implements ConfideRepository
      * @param string $code
      * @return bool
      */
-    public function confirm( $code )
+    public function confirmByCode( $code )
     {
         $user = $this->model()->first(array('confirmation_code'=>$code));
 
@@ -84,11 +84,22 @@ class ConfideMongoRepository implements ConfideRepository
      * @param  string $email The email to be used in the query
      * @return ConfideUser   User object
      */
-    public function getUserByMail( $email )
+    public function getUserByEmail( $email )
     {
         $user = $this->model()->first(array('email'=>$email));
 
         return $user;
+    }
+
+    /**
+     * Find a user by the given email
+     *
+     * @param  string $email The email to be used in the query
+     * @return ConfideUser   User object
+     */
+    public function getUserByEmailOrUsername( $emailOrUsername )
+    {
+        return $this->getUserByEmail($emailOrUsername);
     }
 
     /**
