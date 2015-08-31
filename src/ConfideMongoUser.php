@@ -1,9 +1,9 @@
 <?php namespace Zizaco\ConfideMongo;
 
-use Illuminate\Auth\UserInterface;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Zizaco\MongolidLaravel\MongoLid;
 
-class ConfideMongoUser extends MongoLid implements UserInterface {
+class ConfideMongoUser extends MongoLid implements Authenticatable {
 
     /**
      * The database collection used by the model.
