@@ -3,7 +3,8 @@
 use Illuminate\Contracts\Auth\Authenticatable;
 use Zizaco\MongolidLaravel\MongoLid;
 
-class ConfideMongoUser extends MongoLid implements Authenticatable {
+class ConfideMongoUser extends MongoLid implements Authenticatable
+{
 
     /**
      * The database collection used by the model.
@@ -13,49 +14,39 @@ class ConfideMongoUser extends MongoLid implements Authenticatable {
     protected $collection = 'users';
 
     /**
-     * Laravel application
-     *
-     * @var Illuminate\Foundation\Application
-     */
-    public static $app;
-
-    /**
      * The attributes excluded from the model's JSON form.
      *
      * @var array
      */
-    protected $hidden = array('password');
+    protected $hidden = ['password'];
 
     /**
      * List of attribute names which should be hashed on save.
      *
      * @var array
      */
-    protected $hashedAttributes = array('password');
+    protected $hashedAttributes = ['password'];
 
     /**
      * Ardent validation rules
      *
      * @var array
      */
-    public static $rules = array(
-        'username' => 'required|alpha_dash',
-        'email' => 'required|email',
-        'password' => 'required|between:4,11|confirmed',
+    public static $rules = [
+        'username'          => 'required|alpha_dash',
+        'email'             => 'required|email',
+        'password'          => 'required|between:4,11|confirmed',
         'confirmation_code' => 'required',
-    );
+    ];
 
     /**
      * Create a new ConfideMongoUser instance.
      */
-    public function __construct( array $attributes = array() )
+    public function __construct(array $attributes = [])
     {
-        parent::__construct( $attributes );
+        parent::__construct($attributes);
 
-        if ( ! static::$app )
-            static::$app = app();
-
-        $this->collection = static::$app['config']->get('auth.table');
+        $this->collection = app('config')->get('auth.table');
     }
 
     /**
@@ -89,8 +80,8 @@ class ConfideMongoUser extends MongoLid implements Authenticatable {
         $this->confirmed = 1;
 
         // ConfideRepository will update the database
-        static::$app['confide.repository']
-            ->confirmUser( $this );
+        app('confide.repository')
+            ->confirmUser($this);
 
         return true;
     }
@@ -103,12 +94,12 @@ class ConfideMongoUser extends MongoLid implements Authenticatable {
     public function forgotPassword()
     {
         // ConfideRepository will generate token (and save it into database)
-        $token = static::$app['confide.repository']
-            ->forgotPassword( $this );
+        $token = app('confide.repository')
+            ->forgotPassword($this);
 
-        $view = static::$app['config']->get('confide::email_reset_password');
+        $view = app('config')->get('confide::email_reset_password');
 
-        $this->sendEmail( 'confide::confide.email.password_reset.subject', $view, array('user'=>$this, 'token'=>$token) );
+        $this->sendEmail('confide::confide.email.password_reset.subject', $view, ['user' => $this, 'token' => $token]);
 
         return true;
     }
@@ -117,19 +108,18 @@ class ConfideMongoUser extends MongoLid implements Authenticatable {
      * Change user password
      *
      * @param $params
+     *
      * @return string
      */
-    public function resetPassword( $params )
+    public function resetPassword($params)
     {
-        $password = array_get($params, 'password', '');
+        $password             = array_get($params, 'password', '');
         $passwordConfirmation = array_get($params, 'password_confirmation', '');
 
-        if ( $password == $passwordConfirmation )
-        {
-            return static::$app['confide.repository']
-                ->changePassword( $this, static::$app['hash']->make($password) );
-        }
-        else{
+        if ($password == $passwordConfirmation) {
+            return app('confide.repository')
+                ->changePassword($this, app('hash')->make($password));
+        } else {
             return false;
         }
     }
@@ -141,24 +131,19 @@ class ConfideMongoUser extends MongoLid implements Authenticatable {
      */
     public function isValid()
     {
-        if (parent::isValid())
-        {
+        if (parent::isValid()) {
             $duplicated = false;
 
-            if(! $this->_id)
-            {
-                $duplicated = static::$app['confide.repository']->userExists( $this );
+            if (! $this->_id) {
+                $duplicated = app('confide.repository')->userExists($this);
             }
 
-            if(! $duplicated)
-            {
+            if (! $duplicated) {
                 return true;
-            }
-            else
-            {
+            } else {
                 $this->errors()->add(
                     'duplicated',
-                    static::$app['translator']->get('confide::confide.alerts.duplicated_credentials')
+                    app('translator')->get('confide::confide.alerts.duplicated_credentials')
                 );
 
                 return false;
@@ -171,6 +156,7 @@ class ConfideMongoUser extends MongoLid implements Authenticatable {
      * afterSave() methods.
      *
      * @param $force Force save even if the object is invalid
+     *
      * @return bool
      */
     public function save($force = false)
@@ -189,16 +175,16 @@ class ConfideMongoUser extends MongoLid implements Authenticatable {
      * code if is a new user.
      *
      * @param bool $forced Indicates whether the user is being saved forcefully
+     *
      * @return bool
      */
-    public function beforeSave( $forced = false )
+    public function beforeSave($forced = false)
     {
         /**
          * Generates confirmation code
          */
-        if ( empty($this->_id) )
-        {
-            $this->confirmation_code = md5( uniqid(mt_rand(), true) );
+        if (empty($this->_id)) {
+            $this->confirmation_code = md5(uniqid(mt_rand(), true));
         }
 
         return true;
@@ -210,15 +196,15 @@ class ConfideMongoUser extends MongoLid implements Authenticatable {
      *
      * @param bool $success
      * @param bool $forced Indicates whether the user is being saved forcefully
+     *
      * @return bool
      */
-    public function afterSave( $success,  $forced = false )
+    public function afterSave($success, $forced = false)
     {
-        if ( $success  and ! $this->confirmed )
-        {
-            $view = static::$app['config']->get('confide::email_account_confirmation');
+        if ($success and ! $this->confirmed) {
+            $view = app('config')->get('confide::email_account_confirmation');
 
-            $this->sendEmail( 'confide::confide.email.account_confirmation.subject', $view, array('user' => $this) );
+            $this->sendEmail('confide::confide.email.account_confirmation.subject', $view, ['user' => $this]);
         }
 
         return true;
@@ -233,8 +219,9 @@ class ConfideMongoUser extends MongoLid implements Authenticatable {
      */
     protected static function fixViewHint()
     {
-        if (isset(static::$app['view.finder']))
-            static::$app['view.finder']->addNamespace('confide', __DIR__.'/../../views');
+        if ($viewFinder = app('view.finder')) {
+            $viewFinder->addNamespace('confide', __DIR__ . '/../../views');
+        }
     }
 
     /**
@@ -243,24 +230,27 @@ class ConfideMongoUser extends MongoLid implements Authenticatable {
      * @param mixed $subject_translation
      * @param mixed $view_name
      * @param array $params
+     *
      * @return voi.
      */
-    protected function sendEmail( $subject_translation, $view_name, $params = array() )
+    protected function sendEmail($subject_translation, $view_name, $params = [])
     {
-        if ( static::$app['config']->getEnvironment() == 'testing' )
+        if (app('config')->getEnvironment() == 'testing') {
             return;
+        }
 
         static::fixViewHint();
 
         $user = $this;
 
-        static::$app['mailer']->send($view_name, $params, function($m) use ($subject_translation, $user)
-        {
-            $m->to( $user->email )
-            ->subject( ConfideMongoUser::$app['translator']->get($subject_translation) );
-        });
+        app('mailer')->send(
+            $view_name, $params, function ($m) use ($subject_translation, $user) {
+            $m->to($user->email)
+                ->subject(app('translator')->get($subject_translation));
+        }
+        );
     }
-    
+
     /**
      * Get the token value for the "remember me" session.
      *
@@ -276,7 +266,9 @@ class ConfideMongoUser extends MongoLid implements Authenticatable {
      * Set the token value for the "remember me" session.
      *
      * @see \Illuminate\Auth\UserInterface
-     * @param  string  $value
+     *
+     * @param  string $value
+     *
      * @return void
      */
     public function setRememberToken($value)
@@ -307,13 +299,15 @@ class ConfideMongoUser extends MongoLid implements Authenticatable {
      * the fields contained in the $identityColumns.
      *
      * @deprecated Use ConfideRepository getUserByIdentity instead.
-     * @param  array $credentials      An array containing the attributes to search for
-     * @param  mixed $identityColumns  Array of attribute names or string (for one atribute)
+     *
+     * @param  array $credentials     An array containing the attributes to search for
+     * @param  mixed $identityColumns Array of attribute names or string (for one atribute)
+     *
      * @return boolean                 Exists?
      */
-    public function checkUserExists($credentials, $identity_columns = array('username', 'email'))
+    public function checkUserExists($credentials, $identity_columns = ['username', 'email'])
     {
-        $user = static::$app['confide.repository']->getUserByIdentity($credentials, $identity_columns);
+        $user = app('confide.repository')->getUserByIdentity($credentials, $identity_columns);
 
         if ($user) {
             return true;
@@ -327,13 +321,15 @@ class ConfideMongoUser extends MongoLid implements Authenticatable {
      * the fields contained in the $identityColumns.
      *
      * @deprecated Use ConfideRepository getUserByIdentity instead.
-     * @param  array $credentials      An array containing the attributes to search for
-     * @param  mixed $identityColumns  Array of attribute names or string (for one atribute)
+     *
+     * @param  array $credentials     An array containing the attributes to search for
+     * @param  mixed $identityColumns Array of attribute names or string (for one atribute)
+     *
      * @return boolean                 Is confirmed?
      */
-    public function isConfirmed($credentials, $identity_columns = array('username', 'email'))
+    public function isConfirmed($credentials, $identity_columns = ['username', 'email'])
     {
-        $user = static::$app['confide.repository']->getUserByIdentity($credentials, $identity_columns);
+        $user = app('confide.repository')->getUserByIdentity($credentials, $identity_columns);
 
         if (! is_null($user) and $user->confirmed) {
             return true;
