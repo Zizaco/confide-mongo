@@ -97,7 +97,7 @@ class ConfideMongoUser extends MongoLid implements Authenticatable
         $token = app('confide.repository')
             ->forgotPassword($this);
 
-        $view = app('config')->get('confide::email_reset_password');
+        $view = app('config')->get('confide.email_reset_password');
 
         $this->sendEmail('confide::confide.email.password_reset.subject', $view, ['user' => $this, 'token' => $token]);
 
@@ -202,7 +202,7 @@ class ConfideMongoUser extends MongoLid implements Authenticatable
     public function afterSave($success, $forced = false)
     {
         if ($success and ! $this->confirmed) {
-            $view = app('config')->get('confide::email_account_confirmation');
+            $view = app('config')->get('confide.email_account_confirmation');
 
             $this->sendEmail('confide::confide.email.account_confirmation.subject', $view, ['user' => $this]);
         }
