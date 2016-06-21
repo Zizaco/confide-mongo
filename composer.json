@@ -11,7 +11,6 @@
     ],
     "require": {
         "php": ">=5.5.0",
-        "ext-mongo": "*",
         "illuminate/support": "5.*",
         "zizaco/mongolid-laravel": "*",
         "zizaco/confide": "5.0.x-dev"
