@@ -42,10 +42,8 @@ class ConfideMongoUser extends ActiveRecord implements Authenticatable
     /**
      * Create a new ConfideMongoUser instance.
      */
-    public function __construct(array $attributes = [])
+    public function __construct()
     {
-        parent::__construct($attributes);
-
         $this->collection = app('config')->get('auth.table');
     }
 
@@ -159,7 +157,7 @@ class ConfideMongoUser extends ActiveRecord implements Authenticatable
      *
      * @return bool
      */
-    public function save($force = false)
+    public function save(bool $force = false)
     {
         $this->beforeSave($force);
 
