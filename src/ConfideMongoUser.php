@@ -1,9 +1,9 @@
 <?php namespace Zizaco\ConfideMongo;
 
 use Illuminate\Contracts\Auth\Authenticatable;
-use Zizaco\MongolidLaravel\MongoLid;
+use Mongolid\ActiveRecord;
 
-class ConfideMongoUser extends MongoLid implements Authenticatable
+class ConfideMongoUser extends ActiveRecord implements Authenticatable
 {
 
     /**
@@ -11,7 +11,7 @@ class ConfideMongoUser extends MongoLid implements Authenticatable
      *
      * @var string
      */
-    protected $collection = 'users';
+    public $collection = 'users';
 
     /**
      * The attributes excluded from the model's JSON form.
