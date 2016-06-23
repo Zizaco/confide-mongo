@@ -1,9 +1,9 @@
 <?php namespace Zizaco\ConfideMongo;
 
 use Illuminate\Contracts\Auth\Authenticatable;
-use Mongolid\ActiveRecord;
+use MongolidLaravel\MongolidModel;
 
-class ConfideMongoUser extends ActiveRecord implements Authenticatable
+class ConfideMongoUser extends MongolidModel implements Authenticatable
 {
 
     /**
@@ -42,10 +42,8 @@ class ConfideMongoUser extends ActiveRecord implements Authenticatable
     /**
      * Create a new ConfideMongoUser instance.
      */
-    public function __construct(array $attributes = [])
+    public function __construct()
     {
-        parent::__construct($attributes);
-
         $this->collection = app('config')->get('auth.table');
     }
 
