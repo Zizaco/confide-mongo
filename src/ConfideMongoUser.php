@@ -11,7 +11,7 @@ class ConfideMongoUser extends MongolidModel implements Authenticatable
      *
      * @var string
      */
-    public $collection = 'users';
+    protected $collection = 'users';
 
     /**
      * The attributes excluded from the model's JSON form.
