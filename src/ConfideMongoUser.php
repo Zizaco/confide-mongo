@@ -1,9 +1,9 @@
 <?php namespace Zizaco\ConfideMongo;
 
 use Illuminate\Contracts\Auth\Authenticatable;
-use Mongolid\ActiveRecord;
+use MongolidLaravel\MongolidModel;
 
-class ConfideMongoUser extends ActiveRecord implements Authenticatable
+class ConfideMongoUser extends MongolidModel implements Authenticatable
 {
 
     /**
