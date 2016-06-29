@@ -1,11 +1,12 @@
 <?php
+namespace Zizaco\ConfideMongo;
 
-use Zizaco\Confide\Confide;
-use Zizaco\ConfideMongo\ConfideMongoRepository;
+use Illuminate\Contracts\Config\Repository as Config;
 use Mockery as m;
+use TestCase;
 
-class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
-
+class ConfideRepositoryTest extends TestCase
+{
     /**
      * ConfideRepository instance
      *
@@ -15,10 +16,7 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
 
     public function setUp()
     {
-        $app = $this->mockApp();
         $this->repo = new ConfideMongoRepository();
-
-        $this->repo->app = $app;
     }
 
     public function tearDown()
@@ -26,14 +24,19 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
         m::close();
     }
 
+    /**
+     * @group t
+     */
     public function testGetModel()
     {
         // Make sure to return the wanted value from config
-        $config = m::mock('Illuminate\Config\Repository');
+        $config = m::mock(Config::class);
+
         $config->shouldReceive('get')
             ->with('auth.model')
-            ->andReturn( '_mockedUser' )
+            ->andReturn(ConfideMongoUser::class)
             ->once();
+
         $this->repo->app['config'] = $config;
 
         // Mocks an user
@@ -50,36 +53,35 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
     {
         // Make sure that our user will recieve confirm
         $confide_user = m::mock(new _mockedUser);
-        $confide_user->shouldReceive('confirm') // Should receive confirm
-            ->andReturn( true )
+        $confide_user->shouldReceive('confirm')// Should receive confirm
+        ->andReturn(true)
             ->once()
-            
-            ->getMock()->shouldReceive('first') // Should query for the model
-            ->with(array('confirmation_code'=>'123123'))
-            ->andReturn( $confide_user )
+            ->getMock()->shouldReceive('first')// Should query for the model
+            ->with(['confirmation_code' => '123123'])
+            ->andReturn($confide_user)
             ->once();
 
         // This will make sure that the mocked user will be returned
         // when calling `model()` (that will occur inside `repo->confirm()`)
         $this->repo->model = $confide_user;
 
-        $this->assertTrue( $this->repo->confirmByCode( '123123' ) );
+        $this->assertTrue($this->repo->confirmByCode('123123'));
     }
 
     public function testShouldGetByEmail()
     {
         // Make sure that our user will recieve confirm
         $confide_user = m::mock(new _mockedUser);
-        $confide_user->shouldReceive('first') // Should query for the model
-            ->with(array('email'=>'lol@sample.com'))
-            ->andReturn( $confide_user )
+        $confide_user->shouldReceive('first')// Should query for the model
+        ->with(['email' => 'lol@sample.com'])
+            ->andReturn($confide_user)
             ->once();
 
         // This will make sure that the mocked user will be returned
         // when calling `model()` (that will occur inside `repo->confirm()`)
         $this->repo->model = $confide_user;
 
-        $this->assertEquals( $confide_user, $this->repo->getUserByEmail( 'lol@sample.com' ) );
+        $this->assertEquals($confide_user, $this->repo->getUserByEmail('lol@sample.com'));
     }
 
     public function testShouldGetByIdentity()
@@ -87,27 +89,27 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
         // Make sure that our user will be returned when querying
         $confide_user = m::mock(new _mockedUser);
 
-        $confide_user->email = 'lol@sample.com';
+        $confide_user->email    = 'lol@sample.com';
         $confide_user->username = 'LoL';
 
-        $confide_user->shouldReceive('first') // Should query for the model
-            ->with(array(
-                '$or'=>array(
-                    array('email'=>'lol@sample.com'),
-                    array('username'=>'LoL')
-                )
-            ))
-            ->andReturn( $confide_user )
+        $confide_user->shouldReceive('first')// Should query for the model
+        ->with(
+            [
+                '$or' => [
+                    ['email' => 'lol@sample.com'],
+                    ['username' => 'LoL'],
+                ],
+            ]
+        )
+            ->andReturn($confide_user)
             ->atLeast(1)
-
-            ->getMock()->shouldReceive('first') // Should query for the model
-            ->with(array('$or'=>array(array('email'=>'lol@sample.com'))))
-            ->andReturn( $confide_user )
+            ->getMock()->shouldReceive('first')// Should query for the model
+            ->with(['$or' => [['email' => 'lol@sample.com']]])
+            ->andReturn($confide_user)
             ->atLeast(1)
-            
-            ->getMock()->shouldReceive('first') // Should query for the model
-            ->with(array('$or'=>array(array('username'=>'LoL'))))
-            ->andReturn( $confide_user )
+            ->getMock()->shouldReceive('first')// Should query for the model
+            ->with(['$or' => [['username' => 'LoL']]])
+            ->andReturn($confide_user)
             ->atLeast(1);
 
         // This will make sure that the mocked user will be returned
@@ -115,27 +117,27 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
         $this->repo->model = $confide_user;
 
         // Parameters to search for
-        $values = array(
-            'email' => 'lol@sample.com',
+        $values = [
+            'email'    => 'lol@sample.com',
             'username' => 'LoL',
-        );
+        ];
 
         // Identity
-        $identity = array( 'email','username' );
+        $identity = ['email', 'username'];
 
         // Using array
         $this->assertEquals(
-            $confide_user, $this->repo->getUserByIdentity( $values, $identity )
+            $confide_user, $this->repo->getUserByIdentity($values, $identity)
         );
 
         // Using string
         $this->assertEquals(
-            $confide_user, $this->repo->getUserByIdentity( $values, 'email' )
+            $confide_user, $this->repo->getUserByIdentity($values, 'email')
         );
 
         // Using string for username
         $this->assertEquals(
-            $confide_user, $this->repo->getUserByIdentity( $values, 'username' )
+            $confide_user, $this->repo->getUserByIdentity($values, 'username')
         );
     }
 
@@ -146,18 +148,17 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
 
         $database->password_reminders = $database; // The collection that should be accessed
 
-        $database->shouldReceive('find') // Should query for the password reminders with the given token
-            ->with(array('token'=>'456456'))
-            ->andReturn( $database )
+        $database->shouldReceive('find')// Should query for the password reminders with the given token
+        ->with(['token' => '456456'])
+            ->andReturn($database)
             ->once()
-
             ->getMock()->shouldReceive('count')
-            ->andReturn( 1 )
+            ->andReturn(1)
             ->once();
 
         $this->repo->app['MongoLidConnector'] = $database;
 
-        $this->assertEquals( 1, $this->repo->getPasswordRemindersCount( '456456' ) );
+        $this->assertEquals(1, $this->repo->getPasswordRemindersCount('456456'));
     }
 
     public function testShouldGetPasswordReminderEmailByToken()
@@ -167,14 +168,14 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
 
         $database->password_reminders = $database; // The collection that should be accessed
 
-        $database->shouldReceive('findOne') // Should query for the password reminders collection by the given token
-            ->with(array('token'=>'456456'), array('email'))
-            ->andReturn( 'lol@sample.com' )
+        $database->shouldReceive('findOne')// Should query for the password reminders collection by the given token
+        ->with(['token' => '456456'], ['email'])
+            ->andReturn('lol@sample.com')
             ->once();
 
         $this->repo->app['MongoLidConnector'] = $database;
 
-        $this->assertEquals( 'lol@sample.com', $this->repo->getEmailByReminderToken( '456456' ) );
+        $this->assertEquals('lol@sample.com', $this->repo->getEmailByReminderToken('456456'));
     }
 
     public function testShouldDeletePasswordReminderEmailByToken()
@@ -184,20 +185,20 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
 
         $database->password_reminders = $database; // The collection that should be accessed
 
-        $database->shouldReceive('remove') // Should remove by the given token
-            ->with(array('token'=>'456456'))
-            ->andReturn( null )
+        $database->shouldReceive('remove')// Should remove by the given token
+        ->with(['token' => '456456'])
+            ->andReturn(null)
             ->once();
 
         $this->repo->app['MongoLidConnector'] = $database;
 
-        $this->assertNull( $this->repo->deleteEmailByReminderToken( '456456' ) );
+        $this->assertNull($this->repo->deleteEmailByReminderToken('456456'));
     }
 
     public function testShouldChangePassword()
     {
         // Make sure that the mock will have an _id
-        $confide_user = m::mock(new _mockedUser);
+        $confide_user      = m::mock(new _mockedUser);
         $confide_user->_id = '123123';
 
         // Make sure that the password reminders collection will receive a update
@@ -205,9 +206,9 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
 
         $database->users = $database; // The collection that should be accessed
 
-        $database->shouldReceive('update') // Should update the password of the user
-            ->with(array('_id'=>'123123'), array('$set'=>array('password'=>'secret')))
-            ->andReturn( true )
+        $database->shouldReceive('update')// Should update the password of the user
+        ->with(['_id' => '123123'], ['$set' => ['password' => 'secret']])
+            ->andReturn(true)
             ->once();
 
         $this->repo->app['MongoLidConnector'] = $database;
@@ -232,8 +233,8 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
 
         $database->password_reminders = $database; // The collection that should be accessed
 
-        $database->shouldReceive('insert') // Should query for the password reminders with the given token
-            ->andReturn( true )
+        $database->shouldReceive('insert')// Should query for the password reminders with the given token
+        ->andReturn(true)
             ->once();
 
         $this->repo->app['MongoLidConnector'] = $database;
@@ -250,28 +251,27 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
         $confide_user = m::mock(new _mockedUser);
 
         $confide_user->username = 'Bob';
-        $confide_user->email =    'bob@sample.com';
+        $confide_user->email    = 'bob@sample.com';
 
         // The query should be
-        $query = array(
-            '$or' => array(
-                array('username' => $confide_user->username),
-                array('email' => $confide_user->email)
-            )
-        );
+        $query = [
+            '$or' => [
+                ['username' => $confide_user->username],
+                ['email' => $confide_user->email],
+            ],
+        ];
 
         // Make sure that the password reminders collection will receive a find and count
         $database = $this->repo->app['MongoLidConnector'];
 
         $database->users = $database; // The collection that should be accessed
 
-        $database->shouldReceive('find') // Should query for the password reminders with the given token
-            ->with($query)
-            ->andReturn( $database )
+        $database->shouldReceive('find')// Should query for the password reminders with the given token
+        ->with($query)
+            ->andReturn($database)
             ->once()
-
             ->getMock()->shouldReceive('count')
-            ->andReturn( 1 )
+            ->andReturn(1)
             ->once();
 
         $this->repo->app['MongoLidConnector'] = $database;
@@ -286,7 +286,7 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
     public function testShouldConfirmUser()
     {
         // Make sure that the mock will return an id
-        $confide_user = m::mock(new _mockedUser);
+        $confide_user      = m::mock(new _mockedUser);
         $confide_user->_id = '123123';
 
         // Make sure that the password reminders collection will receive a update
@@ -294,9 +294,9 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
 
         $database->users = $database; // The collection that should be accessed
 
-        $database->shouldReceive('update') // Should query for the password reminders with the given token
-            ->with(array('_id'=>'123123'), array('$set'=>array('confirmed'=>1)))
-            ->andReturn( true )
+        $database->shouldReceive('update')// Should query for the password reminders with the given token
+        ->with(['_id' => '123123'], ['$set' => ['confirmed' => 1]])
+            ->andReturn(true)
             ->once();
 
         $this->repo->app['MongoLidConnector'] = $database;
@@ -310,17 +310,17 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
     /**
      * Returns a mocked ConfideUser object for testing purposes
      * only
-     * 
+     *
      * @return Illuminate\Auth\UserInterface A mocked confide user
      */
     private function mockConfideUser()
     {
-        $confide_user = m::mock( 'Illuminate\Auth\UserInterface' );
-        $confide_user->username = 'uname';
-        $confide_user->password = '123123';
+        $confide_user            = m::mock(\Zizaco\ConfideMongo\ConfideMongoUser::class);
+        $confide_user->username  = 'uname';
+        $confide_user->password  = '123123';
         $confide_user->confirmed = 0;
-        $confide_user->shouldReceive('find','get', 'first', 'all','getUserFromCredsIdentity')
-            ->andReturn( $confide_user );
+        $confide_user->shouldReceive('find', 'get', 'first', 'all', 'getUserFromCredsIdentity')
+            ->andReturn($confide_user);
 
         return $confide_user;
     }
@@ -328,85 +328,87 @@ class ConfideRepositoryTest extends PHPUnit_Framework_TestCase {
     /**
      * Mocks the application components that
      * are not Confide's responsibility
-     * 
+     *
      * @return object Mocked laravel application
      */
     private function mockApp()
     {
         // Mocks the application components that
         // are not Confide's responsibility
-        $app = array();
+        $app = [];
 
-        $app['config'] = m::mock( 'Config' );
-        $app['config']->shouldReceive( 'get' )
-            ->with( 'auth.table' )
-            ->andReturn( 'users' );
+        $app['config'] = m::mock('Config');
+        $app['config']->shouldReceive('get')
+            ->with('auth.table')
+            ->andReturn('users');
 
-        $app['config']->shouldReceive( 'get' )
-            ->with( 'auth.model' )
-            ->andReturn( '_mockedUser' );
+        $app['config']->shouldReceive('get')
+            ->with('auth.model')
+            ->andReturn('_mockedUser');
 
-        $app['config']->shouldReceive( 'get' )
-            ->with( 'app.key' )
-            ->andReturn( '123' );
+        $app['config']->shouldReceive('get')
+            ->with('app.key')
+            ->andReturn('123');
 
-        $app['config']->shouldReceive( 'get' )
-            ->with( 'confide::throttle_limit' )
-            ->andReturn( 9 );
+        $app['config']->shouldReceive('get')
+            ->with('confide::throttle_limit')
+            ->andReturn(9);
 
-        $app['config']->shouldReceive( 'get' )
-            ->with( 'database.mongodb.default.database' )
-            ->andReturn( 'mongolid' );
+        $app['config']->shouldReceive('get')
+            ->with('database.mongodb.default.database')
+            ->andReturn('mongolid');
 
-        $app['config']->shouldReceive( 'get' )
-            ->with( 'database.mongodb.default.database', m::any() )
-            ->andReturn( 'mongolid' );
+        $app['config']->shouldReceive('get')
+            ->with('database.mongodb.default.database', m::any())
+            ->andReturn('mongolid');
 
-        $app['config']->shouldReceive( 'get' )
-            ->andReturn( 'confide::login' );
+        $app['config']->shouldReceive('get')
+            ->andReturn('confide::login');
 
-        $app['mail'] = m::mock( 'Mail' );
+        $app['mail'] = m::mock('Mail');
         $app['mail']->shouldReceive('send')
-            ->andReturn( null );
+            ->andReturn(null);
 
-        $app['hash'] = m::mock( 'Hash' );
+        $app['hash'] = m::mock('Hash');
         $app['hash']->shouldReceive('make')
-            ->andReturn( 'aRandomHash' );
+            ->andReturn('aRandomHash');
 
-        $app['cache'] = m::mock( 'Cache' );
+        $app['cache'] = m::mock('Cache');
         $app['cache']->shouldReceive('get')
-            ->andReturn( 0 );
+            ->andReturn(0);
         $app['cache']->shouldReceive('put');
 
-        $app['auth'] = m::mock( 'Auth' );
+        $app['auth'] = m::mock('Auth');
         $app['auth']->shouldReceive('login')
-            ->andReturn( true );
+            ->andReturn(true);
 
-        $app['request'] = m::mock( 'Request' );
+        $app['request'] = m::mock('Request');
         $app['request']->shouldReceive('server')
-            ->andReturn( null );
+            ->andReturn(null);
 
-        $app['MongoLidConnector'] = m::mock( 'MongoLidConnector' );
+        $app['MongoLidConnector'] = m::mock('MongoLidConnector');
         $app['MongoLidConnector']->shouldReceive('getConnection')
-            ->andReturn( $app['MongoLidConnector'] );
+            ->andReturn($app['MongoLidConnector']);
         $app['MongoLidConnector']->mongolid = $app['MongoLidConnector'];
-        $app['MongoLidConnector']->users = $app['MongoLidConnector'];
+        $app['MongoLidConnector']->users    = $app['MongoLidConnector'];
 
         return $app;
     }
-
 }
 
-class _mockedUser {
-
+class _mockedUser
+{
     public function getCollectionName()
     {
         return 'users';
     }
 }
 
-if(! function_exists('app')) {
-    function app() {
-        
+if (! function_exists('app')) {
+    /**
+     * Fake
+     */
+    function app()
+    {
     }
 }

@@ -1,11 +1,10 @@
 <?php namespace Zizaco\ConfideMongo;
 
-use Illuminate\Contracts\Auth\Authenticatable;
 use MongolidLaravel\MongolidModel;
+use Zizaco\Confide\ConfideUserInterface;
 
-class ConfideMongoUser extends MongolidModel implements Authenticatable
+class ConfideMongoUser extends MongolidModel implements ConfideUserInterface
 {
-
     /**
      * The database collection used by the model.
      *
@@ -40,11 +39,27 @@ class ConfideMongoUser extends MongolidModel implements Authenticatable
     ];
 
     /**
+     * @var ConfideMongoRepository
+     */
+    protected $confideRepository;
+
+    /**
      * Create a new ConfideMongoUser instance.
      */
     public function __construct()
     {
-        $this->collection = app('config')->get('auth.table');
+        $this->collection        = app('config')->get('auth.table');
+        $this->confideRepository = app('confide.repository');
+    }
+
+    /**
+     * Get the name of the unique identifier for the user.
+     *
+     * @return string
+     */
+    public function getAuthIdentifierName()
+    {
+        return '_id';
     }
 
     /**
@@ -77,11 +92,7 @@ class ConfideMongoUser extends MongolidModel implements Authenticatable
     {
         $this->confirmed = 1;
 
-        // ConfideRepository will update the database
-        app('confide.repository')
-            ->confirmUser($this);
-
-        return true;
+        return $this->update();
     }
 
     /**
@@ -92,8 +103,7 @@ class ConfideMongoUser extends MongolidModel implements Authenticatable
     public function forgotPassword()
     {
         // ConfideRepository will generate token (and save it into database)
-        $token = app('confide.repository')
-            ->forgotPassword($this);
+        $token = $this->confideRepository->forgotPassword($this);
 
         $view = app('config')->get('confide.email_reset_password');
 
@@ -103,7 +113,7 @@ class ConfideMongoUser extends MongolidModel implements Authenticatable
     }
 
     /**
-     * Change user password
+     * Change the user password, hashing before save to the collection.
      *
      * @param $params
      *
@@ -111,15 +121,16 @@ class ConfideMongoUser extends MongolidModel implements Authenticatable
      */
     public function resetPassword($params)
     {
-        $password             = array_get($params, 'password', '');
-        $passwordConfirmation = array_get($params, 'password_confirmation', '');
+        $password             = $params['password'] ?? '';
+        $passwordConfirmation = $params['password_confirmation'] ?? '';
 
         if ($password == $passwordConfirmation) {
-            return app('confide.repository')
-                ->changePassword($this, app('hash')->make($password));
-        } else {
-            return false;
+            $this->password = app('hash')->make($password);
+
+            return $this->save();
         }
+
+        return false;
     }
 
     /**
@@ -133,27 +144,27 @@ class ConfideMongoUser extends MongolidModel implements Authenticatable
             $duplicated = false;
 
             if (! $this->_id) {
-                $duplicated = app('confide.repository')->userExists($this);
+                $duplicated = $this->confideRepository->userExists($this);
             }
 
             if (! $duplicated) {
                 return true;
-            } else {
-                $this->errors()->add(
-                    'duplicated',
-                    app('translator')->get('confide::confide.alerts.duplicated_credentials')
-                );
-
-                return false;
             }
+
+            $this->errors()->add(
+                'duplicated',
+                app('translator')->get('confide::confide.alerts.duplicated_credentials')
+            );
         }
+
+        return false;
     }
 
     /**
      * Save the model to the database if it's valid. Run beforeSave() and
      * afterSave() methods.
      *
-     * @param $force Force save even if the object is invalid
+     * @param bool $force Force save even if the object is invalid
      *
      * @return bool
      */
@@ -178,9 +189,7 @@ class ConfideMongoUser extends MongolidModel implements Authenticatable
      */
     public function beforeSave($forced = false)
     {
-        /**
-         * Generates confirmation code
-         */
+        /* Generates confirmation code */
         if (empty($this->_id)) {
             $this->confirmation_code = md5(uniqid(mt_rand(), true));
         }
@@ -199,7 +208,7 @@ class ConfideMongoUser extends MongolidModel implements Authenticatable
      */
     public function afterSave($success, $forced = false)
     {
-        if ($success and ! $this->confirmed) {
+        if ($success && ! $this->confirmed) {
             $view = app('config')->get('confide.email_account_confirmation');
 
             $this->sendEmail('confide::confide.email.account_confirmation.subject', $view, ['user' => $this]);
@@ -229,23 +238,21 @@ class ConfideMongoUser extends MongolidModel implements Authenticatable
      * @param mixed $view_name
      * @param array $params
      *
-     * @return voi.
+     * @return void
      */
     protected function sendEmail($subject_translation, $view_name, $params = [])
     {
-        if (app('config')->getEnvironment() == 'testing') {
-            return;
-        }
-
         static::fixViewHint();
 
-        $user = $this;
-
         app('mailer')->send(
-            $view_name, $params, function ($m) use ($subject_translation, $user) {
-            $m->to($user->email)
-                ->subject(app('translator')->get($subject_translation));
-        }
+            $view_name,
+            $params,
+            function ($mail) use ($subject_translation) {
+                $mail->to($this->email)
+                    ->subject(
+                        app('translator')->get($subject_translation)
+                    );
+            }
         );
     }
 
@@ -253,6 +260,7 @@ class ConfideMongoUser extends MongolidModel implements Authenticatable
      * Get the token value for the "remember me" session.
      *
      * @see \Illuminate\Auth\UserInterface
+     *
      * @return string
      */
     public function getRememberToken()
@@ -278,6 +286,7 @@ class ConfideMongoUser extends MongolidModel implements Authenticatable
      * Get the column name for the "remember me" token.
      *
      * @see \Illuminate\Auth\UserInterface
+     *
      * @return string
      */
     public function getRememberTokenName()
@@ -285,12 +294,7 @@ class ConfideMongoUser extends MongolidModel implements Authenticatable
         return 'remember_token';
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Deprecated methods
-    |--------------------------------------------------------------------------
-    |
-    */
+    /* Deprecated methods */
 
     /**
      * [Deprecated] Checks if an user exists by it's credentials. Perform a 'where' within
@@ -298,20 +302,20 @@ class ConfideMongoUser extends MongolidModel implements Authenticatable
      *
      * @deprecated Use ConfideRepository getUserByIdentity instead.
      *
-     * @param  array $credentials     An array containing the attributes to search for
-     * @param  mixed $identityColumns Array of attribute names or string (for one atribute)
+     * @param  array $credentials      An array containing the attributes to search for
+     * @param  mixed $identity_columns Array of attribute names or string (for one attribute)
      *
      * @return boolean                 Exists?
      */
     public function checkUserExists($credentials, $identity_columns = ['username', 'email'])
     {
-        $user = app('confide.repository')->getUserByIdentity($credentials, $identity_columns);
+        $user = $this->confideRepository->getUserByIdentity($credentials, $identity_columns);
 
         if ($user) {
             return true;
-        } else {
-            return false;
         }
+
+        return false;
     }
 
     /**
@@ -320,19 +324,19 @@ class ConfideMongoUser extends MongolidModel implements Authenticatable
      *
      * @deprecated Use ConfideRepository getUserByIdentity instead.
      *
-     * @param  array $credentials     An array containing the attributes to search for
-     * @param  mixed $identityColumns Array of attribute names or string (for one atribute)
+     * @param  array $credentials      An array containing the attributes to search for
+     * @param  mixed $identity_columns Array of attribute names or string (for one atribute)
      *
      * @return boolean                 Is confirmed?
      */
     public function isConfirmed($credentials, $identity_columns = ['username', 'email'])
     {
-        $user = app('confide.repository')->getUserByIdentity($credentials, $identity_columns);
+        $user = $this->confideRepository->getUserByIdentity($credentials, $identity_columns);
 
         if (! is_null($user) and $user->confirmed) {
             return true;
-        } else {
-            return false;
         }
+
+        return false;
     }
 }

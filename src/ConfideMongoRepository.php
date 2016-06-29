@@ -1,5 +1,8 @@
 <?php namespace Zizaco\ConfideMongo;
 
+use Exception;
+use Mongolid\Connection\Pool;
+use Zizaco\Confide\ConfideUser;
 use Zizaco\Confide\RepositoryInterface;
 
 /**
@@ -8,13 +11,6 @@ use Zizaco\Confide\RepositoryInterface;
  */
 class ConfideMongoRepository implements RepositoryInterface
 {
-    /**
-     * Laravel application
-     *
-     * @var Illuminate\Foundation\Application
-     */
-    public $app;
-
     /**
      * Name of the model that should be used to retrieve your users.
      * You may specify an specific object. Then that object will be
@@ -25,79 +21,86 @@ class ConfideMongoRepository implements RepositoryInterface
     public $model;
 
     /**
-     * Create a new RepositoryInterface
+     * Collection name used for password reminders functionality.
      *
-     * @return void
+     * @var string
+     */
+    protected $reminderCollection = 'password_reminders';
+
+    /**
+     * Config contract to get Laravel's config.
+     *
+     * @var ConfigContract
+     */
+    protected $config;
+
+    /**
+     * Create a new RepositoryInterface
      */
     public function __construct()
     {
-        $this->app = app();
+        $this->config = app('config');
     }
 
     /**
      * Returns the model set in auth config
      *
-     * @return mixed Instantiated object of the 'auth.model' class
+     * @return ConfideMongoUser Instantiated object of the 'auth.model' class
+     * @throws Exception
      */
-    public function model()
+    public function model(): ConfideMongoUser
     {
-        if (! $this->model)
-        {
-            $this->model = $this->app['config']->get('auth.model');
+        if (null === $this->model) {
+            $this->model = $this->config->get('auth.model');
         }
 
-        if(is_object($this->model))
-        {
+        if (is_object($this->model)) {
             return $this->model;
-        }
-        elseif(is_string($this->model))
-        {
+        } elseif (is_string($this->model)) {
             return new $this->model;
         }
 
-        throw new \Exception("Model not specified in config/auth.php", 639);
+        throw new Exception("Model not specified in config/auth.php", 639);
     }
 
     /**
      * Set the user confirmation to true.
      *
      * @param string $code
+     *
      * @return bool
      */
-    public function confirmByCode( $code )
+    public function confirmByCode($code)
     {
-        $user = $this->model()->first(array('confirmation_code'=>$code));
+        $user = $this->model()->first(['confirmation_code' => $code]);
 
-        if( $user )
-        {
+        if ($user) {
             return $user->confirm();
         }
-        else
-        {
-            return false;
-        }
+
+        return false;
     }
 
     /**
      * Find a user by the given email
      *
      * @param  string $email The email to be used in the query
-     * @return ConfideUser   User object
+     *
+     * @return ConfideMongoUser User object
      */
-    public function getUserByEmail( $email )
+    public function getUserByEmail($email)
     {
-        $user = $this->model()->first(array('email'=>$email));
-
-        return $user;
+        return $this->model()->first(['email' => $email]);
     }
 
     /**
      * Find a user by the given email
      *
-     * @param  string $email The email to be used in the query
+     * @param  string $emailOrUsername The email to be used in the query
+     *
      * @return ConfideUser   User object
      */
-    public function getUserByEmailOrUsername( $emailOrUsername )
+    public function getUserByEmailOrUsername($emailOrUsername)
     {
         return $this->getUserByEmail($emailOrUsername);
     }
@@ -106,23 +109,22 @@ class ConfideMongoRepository implements RepositoryInterface
      * Find a user by it's credentials. Perform a 'find' within
      * the fields contained in the $identityColumns.
      *
-     * @param  array $credentials      An array containing the attributes to search for
-     * @param  mixed $identityColumns  Array of attribute names or string (for one atribute)
+     * @param  array $credentials     An array containing the attributes to search for
+     * @param  mixed $identityColumns Array of attribute names or string (for one attribute)
+     *
      * @return ConfideUser             User object
      */
-    public function getUserByIdentity( $credentials, $identityColumns = array('email') )
+    public function getUserByIdentity($credentials, $identityColumns = ['email'])
     {
-        $identityColumns = (array)$identityColumns;
+        $identityColumns = (array) $identityColumns;
 
         $user = $this->model();
 
-        $query = array('$or'=>array());
+        $query = ['$or' => []];
 
         foreach ($identityColumns as $attribute) {
-
-            if(isset($credentials[$attribute]))
-            {
-                $query['$or'][] = array($attribute => $credentials[$attribute]);
+            if (isset($credentials[$attribute])) {
+                $query['$or'][] = [$attribute => $credentials[$attribute]];
             }
         }
 
@@ -130,15 +132,41 @@ class ConfideMongoRepository implements RepositoryInterface
     }
 
     /**
+     * Checks if an non saved user has duplicated credentials
+     * (email and/or username)
+     *
+     * @param  ConfideMongoUser $user The non-saved user to be checked
+     *
+     * @return int          The number of entries founds. Probably 0 or 1.
+     */
+    public function userExists(ConfideMongoUser $user)
+    {
+        if ($user->username) {
+            $query = [
+                '$or' => [
+                    ['username' => $user->username],
+                    ['email' => $user->email],
+                ],
+            ];
+        } else {
+            $query = ['email' => $user->email];
+        }
+
+        return $user->where($query)->count();
+    }
+
+    /**
      * Get password reminders count by the given token
      *
      * @param  string $token
+     *
      * @return int    Password reminders count
      */
-    public function getPasswordRemindersCount( $token )
+    public function getPasswordRemindersCount($token)
     {
-        $count = $this->database()->password_reminders
-            ->find(array('token'=>$token))->count();
+        $count = $this->database()
+            ->{$this->reminderCollection}
+            ->findOne(['token' => $token])->count();
 
         return $count;
     }
@@ -147,54 +175,30 @@ class ConfideMongoRepository implements RepositoryInterface
      * Get email of password reminder by the given token
      *
      * @param  string $token
+     *
      * @return string Email
      */
-    public function getEmailByReminderToken( $token )
+    public function getEmailByReminderToken($token)
     {
-        $email = $this->database()->password_reminders
-            ->findOne(array('token'=>$token), array('email'));
+        $email = $this->database()
+            ->{$this->reminderCollection}
+            ->findOne(['token' => $token], ['email']);
 
-        if ($email && is_object($email))
-        {
-            $email = $email->email;
-        }
-        elseif ($email && is_array($email))
-        {
-            $email = $email['email'];
-        }
-
-        return $email;
+        return $email->email ?? $email['email'] ?? '';
     }
 
     /**
      * Remove password reminder from database by the given token
      *
      * @param  string $token
+     *
      * @return void
      */
-    public function deleteEmailByReminderToken( $token )
+    public function deleteEmailByReminderToken($token)
     {
-        $this->database()->password_reminders
-            ->remove(array('token'=>$token));
-    }
-
-    /**
-     * Change the password of the given user. Make sure to hash
-     * the $password before calling this method.
-     *
-     * @param  ConfideUser $user     An existent user
-     * @param  string      $password The password hash to be used
-     * @return boolean Success
-     */
-    public function changePassword( $user, $password )
-    {
-        $usersCollection = $user->getCollectionName();
-        $id = $user->_id;
-
-        $this->database()->$usersCollection
-            ->update(array('_id'=>$id), array('$set'=>array('password'=>$password)));
-
-        return true;
+        $this->database()
+            ->{$this->reminderCollection}
+            ->deleteOne(['token' => $token]);
     }
 
     /**
@@ -202,92 +206,86 @@ class ConfideMongoRepository implements RepositoryInterface
      * the 'password_reminders' table with the email of the
      * user.
      *
-     * @param  ConfideUser $user     An existent user
+     * @param  ConfideUser $user An existent user
+     *
      * @return string Password reset token
      */
-    public function forgotPassword( $user )
+    public function forgotPassword($user)
     {
-        $token = md5( uniqid(mt_rand(), true) );
+        $token = md5(uniqid(mt_rand(), true));
 
-        $values = array(
-            'email'=> $user->email,
-            'token'=> $token,
-            'created_at'=> new \DateTime
-        );
+        $values = [
+            'email'      => $user->email,
+            'token'      => $token,
+            'created_at' => new \DateTime,
+        ];
 
-        $this->database()->password_reminders
-            ->insert( $values );
+        $this->database()
+            ->{$this->reminderCollection}
+            ->insertOne($values);
 
         return $token;
     }
 
     /**
-     * Checks if an non saved user has duplicated credentials
-     * (email and/or username)
+     * Validate the user by a given custom rule.
      *
-     * @param  ConfideUser  $user The non-saved user to be checked
-     * @return int          The number of duplicated entry founds. Probably 0 or 1.
-     */
-    public function userExists( $user )
-    {
-        $usersCollection = $user->getCollectionName();
-
-        if($user->username)
-        {
-            $query = array(
-                '$or' => array(
-                    array('username' => $user->username),
-                    array('email' => $user->email)
-                )
-            );
-        }
-        else
-        {
-            $query = array('email' => $user->email);
-        }
-
-        $users = $this->database()->$usersCollection
-            ->find($query);
-
-        $count = $users->count();
-
-        return $count;
-    }
-
-    /**
-     * Set the 'confirmed' column of the given user to 1
+     * @param       $user
+     * @param array $rules
+     * @param array $customMessages
      *
-     * @param  ConfideUser $user     An existent user
-     * @return boolean Success
+     * @return mixed
      */
-    public function confirmUser( $user )
+    public function validate($user, array $rules, array $customMessages)
     {
-        $usersCollection = $user->getCollectionName();
-        $id = $user->_id;
-
-        $this->database()->$usersCollection
-            ->update(array('_id'=>$id), array('$set'=>array('confirmed'=>1)));
-
-        return true;
+        return $user->validate($rules, $customMessages);
     }
 
     /**
      * Returns the MongoDB database object (using the database provided
      * in the config)
      *
-     * @return MongoDatabase
+     * @return \MongoDB\Client
      */
     protected function database()
     {
-        $name = $this->app['config']->get('database.mongodb.default.database');
+        $connection = app(Pool::class)->getConnection();
+        $database   = $connection->defaultDatabase;
 
-        $database = $this->app['MongoLidConnector']->getConnection()->$name;
-
-        return $database;
+        return $connection->getRawConnection()->$database;
     }
 
-     public function validate($user, array $rules, array $customMessages)
+    /* Deprecated Methods */
+
+    /**
+     * Change the password of the given user. Make sure to hash
+     * the $password before calling this method.
+     *
+     * @deprecated use ConfideMongoUser resetPassword method instead.
+     *
+     * @param  ConfideUser $user     An existent user
+     * @param  string      $password The password hash to be used
+     *
+     * @return boolean Success
+     */
+    public function changePassword($user, $password)
     {
-        return $user->validate($rules, $customMessages);
+        $user->password = $password;
+
+        return $user->save();
+    }
+
+    /**
+     * Set the 'confirmed' column of the given user to 1
+     *
+     * @deprecated use ConfideMongoUser resetPassword method instead.
+     *
+     * @param  ConfideMongoUser $user An existent user
+     *
+     * @return boolean Success
+     */
+    public function confirmUser(ConfideMongoUser $user)
+    {
+        return $user->confirm();
     }
 }
