@@ -3,7 +3,6 @@ namespace Zizaco\ConfideMongo;
 
 use Illuminate\Contracts\Config\Repository as Config;
 use Mockery as m;
-use TestCase;
 
 class ConfideRepositoryTest extends TestCase
 {
