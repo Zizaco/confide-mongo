@@ -48,8 +48,9 @@ class ConfideMongoUser extends MongolidModel implements ConfideUserInterface
      */
     public function __construct()
     {
-        $this->collection        = app('config')->get('auth.table');
-        $this->confideRepository = app('confide.repository');
+        // If no collection was set, fallback to Laravel's config default
+        $this->collection        = $this->collection ?? app('config')->get('auth.table');
+        $this->confideRepository = new ConfideMongoRepository;
     }
 
     /**

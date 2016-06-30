@@ -28,21 +28,6 @@ class ConfideMongoRepository implements RepositoryInterface
     protected $reminderCollection = 'password_reminders';
 
     /**
-     * Config contract to get Laravel's config.
-     *
-     * @var ConfigContract
-     */
-    protected $config;
-
-    /**
-     * Create a new RepositoryInterface
-     */
-    public function __construct()
-    {
-        $this->config = app('config');
-    }
-
-    /**
      * Returns the model set in auth config
      *
      * @return ConfideMongoUser Instantiated object of the 'auth.model' class
@@ -51,7 +36,7 @@ class ConfideMongoRepository implements RepositoryInterface
     public function model(): ConfideMongoUser
     {
         if (null === $this->model) {
-            $this->model = $this->config->get('auth.model');
+            $this->model = app('config')->get('auth.model');
         }
 
         if (is_object($this->model)) {

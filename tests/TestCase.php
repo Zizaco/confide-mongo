@@ -13,7 +13,7 @@ abstract class TestCase extends PHPUnit_Framework_TestCase
      */
     public function tearDown()
     {
-        Container::setInstance(null);
+        Container::setInstance(new Container);
     }
 
     /**
@@ -68,7 +68,8 @@ abstract class TestCase extends PHPUnit_Framework_TestCase
     protected function setInstance($abstract, $concrete)
     {
         $container = Container::getInstance();
-        $container->bind($abstract, $concrete);
+        $container->instance($abstract, $concrete);
+        
         Container::setInstance($container);
     }
 }

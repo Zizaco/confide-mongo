@@ -1,53 +1,55 @@
 <?php
 namespace Zizaco\ConfideMongo;
 
+use Illuminate\Container\Container;
 use Illuminate\Contracts\Config\Repository as Config;
 use Mockery as m;
 
 class ConfideRepositoryTest extends TestCase
 {
     /**
-     * ConfideRepository instance
+     * ConfideMongoRepository instance
      *
-     * @var Zizaco\Confide\ConfideRepository
+     * @var ConfideMongoRepository
      */
     protected $repo;
 
     public function setUp()
     {
-        $this->repo = new ConfideMongoRepository();
+        parent::setUp();
+
+        $this->repo = new ConfideMongoRepository;
     }
 
     public function tearDown()
     {
         m::close();
+
+        parent::tearDown();
+    }
+
+    public function testGetModel()
+    {
+        // Arrange
+        $config = m::mock(Config::class);
+
+        $config->shouldReceive('get')
+            ->once()
+            ->with('auth.model')
+            ->andReturn(ConfideMongoUser::class);
+
+        $this->setInstance('config',  $config);
+
+        // Actions
+        $user = $this->repo->model();
+
+        // Assert
+        $this->assertInstanceOf(ConfideMongoUser::class, $user);
     }
 
     /**
      * @group t
      */
-    public function testGetModel()
-    {
-        // Make sure to return the wanted value from config
-        $config = m::mock(Config::class);
-
-        $config->shouldReceive('get')
-            ->with('auth.model')
-            ->andReturn(ConfideMongoUser::class)
-            ->once();
-
-        $this->repo->app['config'] = $config;
-
-        // Mocks an user
-        $confide_user = $this->mockConfideUser();
-
-        // Runs the `model()` method
-        $user = $this->repo->model();
-
-        // Assert the result
-        $this->assertInstanceOf('_mockedUser', $user);
-    }
-
     public function testShouldConfirmByCode()
     {
         // Make sure that our user will recieve confirm
@@ -314,14 +316,12 @@ class ConfideRepositoryTest extends TestCase
      */
     private function mockConfideUser()
     {
-        $confide_user            = m::mock(\Zizaco\ConfideMongo\ConfideMongoUser::class);
-        $confide_user->username  = 'uname';
-        $confide_user->password  = '123123';
-        $confide_user->confirmed = 0;
-        $confide_user->shouldReceive('find', 'get', 'first', 'all', 'getUserFromCredsIdentity')
-            ->andReturn($confide_user);
+        $confideUser            = new ConfideMongoUser;
+        $confideUser->username  = 'uname';
+        $confideUser->password  = '123123';
+        $confideUser->confirmed = 0;
 
-        return $confide_user;
+        return $confideUser;
     }
 
     /**
@@ -400,14 +400,5 @@ class _mockedUser
     public function getCollectionName()
     {
         return 'users';
-    }
-}
-
-if (! function_exists('app')) {
-    /**
-     * Fake
-     */
-    function app()
-    {
     }
 }
