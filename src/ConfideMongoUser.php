@@ -125,9 +125,9 @@ class ConfideMongoUser extends MongolidModel implements ConfideUserInterface
         $passwordConfirmation = $params['password_confirmation'] ?? '';
 
         if ($password == $passwordConfirmation) {
-            $this->password = app('hash')->make($password);
+            $this->password = $password;
 
-            return $this->save();
+            return $this->update();
         }
 
         return false;
