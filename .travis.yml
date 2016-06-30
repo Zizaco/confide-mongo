@@ -1,12 +1,10 @@
 language: php
 
 php: 
-  - 5.5
-  - 5.6
+  - 7.0
 
 before_script:
-  - echo "extension = mongo.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
-  - curl -s http://getcomposer.org/installer | php
-  - php composer.phar install --dev
+  - echo "extension = mongodb.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+  - composer install
 
 script: phpunit
