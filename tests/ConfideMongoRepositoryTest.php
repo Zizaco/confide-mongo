@@ -316,7 +316,7 @@ class ConfideRepositoryTest extends TestCase
      *
      * @return ConfideMongoRepository
      */
-    public function getRepositoryWithDatabaseInteraction($mockMongoClient)
+    protected function getRepositoryWithDatabaseInteraction($mockMongoClient)
     {
         $repository = m::mock(ConfideMongoRepository::class . '[database]')
             ->shouldAllowMockingProtectedMethods();
@@ -333,15 +333,10 @@ class ConfideRepositoryTest extends TestCase
      *
      * @return ConfideMongoUser A mocked confide user
      */
-    private function getConfideMongoUser()
+    protected function getConfideMongoUser()
     {
         $confideUser = m::mock(ConfideMongoUser::class)
-            ->makePartial()
-            ->shouldAllowMockingProtectedMethods();
-
-        $confideUser->username  = 'uname';
-        $confideUser->password  = '123123';
-        $confideUser->confirmed = 0;
+            ->makePartial();
 
         return $confideUser;
     }
