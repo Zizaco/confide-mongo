@@ -3,6 +3,8 @@ namespace Zizaco\ConfideMongo;
 
 use Illuminate\Contracts\Config\Repository as Config;
 use Mockery as m;
+use MongoDB\Client;
+use MongoDB\Collection;
 
 class ConfideRepositoryTest extends TestCase
 {
@@ -106,7 +108,6 @@ class ConfideRepositoryTest extends TestCase
         $confideUser->username = $values['username'];
 
         // Expectations
-
         $confideUser->shouldReceive('first')
             ->with(
                 [
@@ -134,24 +135,31 @@ class ConfideRepositoryTest extends TestCase
         $this->assertEquals($confideUser, $repository->getUserByIdentity($values, 'username'));
     }
 
-    public function testShouldGetPasswordRemindersCountByToken_legacy()
+    public function testShouldGetPasswordRemindersCountByToken()
     {
-        // Make sure that the password reminders table will receive a first
-        $database = $this->repo->app['MongoLidConnector'];
+        // Set
+        $database   = m::mock(Client::class);
+        $collection = m::mock(Collection::class);
+        $repository = $this->getRepositoryWithDatabaseInteraction($database);
 
-        $database->password_reminders = $database; // The collection that should be accessed
+        $reminderCollection = 'password_reminders';
 
-        $database->shouldReceive('find')// Should query for the password reminders with the given token
-        ->with(['token' => '456456'])
-            ->andReturn($database)
+        $database->$reminderCollection = $collection;
+
+        // Expectations
+        $collection->shouldReceive('findOne')
+            ->with(['token' => '456456'])
+            ->andReturnSelf();
+
+        $collection->shouldReceive('count')
             ->once()
-            ->getMock()->shouldReceive('count')
-            ->andReturn(1)
-            ->once();
+            ->andReturn(1);
 
-        $this->repo->app['MongoLidConnector'] = $database;
+        // Actions
+        $result = $repository->getPasswordRemindersCount('456456');
 
-        $this->assertEquals(1, $this->repo->getPasswordRemindersCount('456456'));
+        // Assertions
+        $this->assertEquals(1, $result);
     }
 
     public function testShouldGetPasswordReminderEmailByToken_legacy()
@@ -301,10 +309,26 @@ class ConfideRepositoryTest extends TestCase
     }
 
     /**
-     * Returns a mocked ConfideMongoUser object for testing purposes
-     * only
+     * Make a partial mock that interacts with database.
      *
-     * @param $configMock Config mock to be used
+     * @param $mockMongoClient
+     *
+     * @return ConfideMongoRepository
+     */
+    public function getRepositoryWithDatabaseInteraction($mockMongoClient)
+    {
+        $repository = m::mock(ConfideMongoRepository::class . '[database]')
+            ->shouldAllowMockingProtectedMethods();
+
+        $repository->shouldReceive('database')
+            ->andReturn($mockMongoClient);
+
+        return $repository;
+    }
+
+    /**
+     * Returns a mocked ConfideMongoUser object for testing purposes
+     * only.
      *
      * @return ConfideMongoUser A mocked confide user
      */
