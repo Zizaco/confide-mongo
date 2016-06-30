@@ -2,6 +2,7 @@
 
 use Exception;
 use Mongolid\Connection\Pool;
+use Mongolid\Serializer\Type\UTCDateTime;
 use Zizaco\Confide\ConfideUser;
 use Zizaco\Confide\RepositoryInterface;
 
@@ -122,7 +123,7 @@ class ConfideMongoRepository implements RepositoryInterface
      *
      * @param  ConfideMongoUser $user The non-saved user to be checked
      *
-     * @return int          The number of entries founds. Probably 0 or 1.
+     * @return int The number of entries founds. Probably 0 or 1.
      */
     public function userExists(ConfideMongoUser $user)
     {
@@ -169,7 +170,7 @@ class ConfideMongoRepository implements RepositoryInterface
             ->{$this->reminderCollection}
             ->findOne(['token' => $token], ['email']);
 
-        return $email->email ?? $email['email'] ?? '';
+        return $email->email ?? '';
     }
 
     /**
@@ -191,7 +192,7 @@ class ConfideMongoRepository implements RepositoryInterface
      * the 'password_reminders' table with the email of the
      * user.
      *
-     * @param  ConfideUser $user An existent user
+     * @param  ConfideMongoUser $user An existent user
      *
      * @return string Password reset token
      */
@@ -202,7 +203,7 @@ class ConfideMongoRepository implements RepositoryInterface
         $values = [
             'email'      => $user->email,
             'token'      => $token,
-            'created_at' => new \DateTime,
+            'created_at' => (new UTCDateTime())->convert(),
         ];
 
         $this->database()
@@ -248,8 +249,8 @@ class ConfideMongoRepository implements RepositoryInterface
      *
      * @deprecated use ConfideMongoUser resetPassword method instead.
      *
-     * @param  ConfideUser $user     An existent user
-     * @param  string      $password The password hash to be used
+     * @param  ConfideMongoUser $user     An existent user
+     * @param  string           $password The password hash to be used
      *
      * @return boolean Success
      */
@@ -269,7 +270,7 @@ class ConfideMongoRepository implements RepositoryInterface
      *
      * @return boolean Success
      */
-    public function confirmUser(ConfideMongoUser $user)
+    public function confirmUser($user)
     {
         return $user->confirm();
     }

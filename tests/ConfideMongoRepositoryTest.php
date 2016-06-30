@@ -162,99 +162,89 @@ class ConfideRepositoryTest extends TestCase
         $this->assertEquals(1, $result);
     }
 
-    public function testShouldGetPasswordReminderEmailByToken_legacy()
+    public function testShouldGetPasswordReminderEmailByToken()
     {
-        // Make sure that the password reminders collection will receive a first
-        $database = $this->repo->app['MongoLidConnector'];
+        // Set
+        $database    = m::mock(Client::class);
+        $collection  = m::mock(Collection::class);
+        $confideUser = $this->getConfideMongoUser();
+        $repository  = $this->getRepositoryWithDatabaseInteraction($database);
 
-        $database->password_reminders = $database; // The collection that should be accessed
+        $confideUser->email = 'lol@sample.com';
 
-        $database->shouldReceive('findOne')// Should query for the password reminders collection by the given token
-        ->with(['token' => '456456'], ['email'])
-            ->andReturn('lol@sample.com')
-            ->once();
+        $reminderCollection = 'password_reminders';
 
-        $this->repo->app['MongoLidConnector'] = $database;
+        $database->$reminderCollection = $collection;
 
-        $this->assertEquals('lol@sample.com', $this->repo->getEmailByReminderToken('456456'));
+        // Expectations
+        $collection->shouldReceive('findOne')
+            ->once()
+            ->with(['token' => '456456'], ['email'])
+            ->andReturn($confideUser);
+
+        // Actions
+        $result = $repository->getEmailByReminderToken('456456');
+
+        // Assertions
+        $this->assertEquals('lol@sample.com', $result);
     }
 
-    public function testShouldDeletePasswordReminderEmailByToken_legacy()
+    public function testShouldDeletePasswordReminderEmailByToken()
     {
-        // Make sure that the password reminders collection will receive a remove
-        $database = $this->repo->app['MongoLidConnector'];
+        // Set
+        $database   = m::mock(Client::class);
+        $collection = m::mock(Collection::class);
+        $repository = $this->getRepositoryWithDatabaseInteraction($database);
 
-        $database->password_reminders = $database; // The collection that should be accessed
+        $reminderCollection = 'password_reminders';
 
-        $database->shouldReceive('remove')// Should remove by the given token
-        ->with(['token' => '456456'])
-            ->andReturn(null)
-            ->once();
+        $database->$reminderCollection = $collection;
 
-        $this->repo->app['MongoLidConnector'] = $database;
+        // Expectations
+        $collection->shouldReceive('deleteOne')
+            ->once()
+            ->with(['token' => '456456']);
 
-        $this->assertNull($this->repo->deleteEmailByReminderToken('456456'));
+        // Actions
+        $repository->deleteEmailByReminderToken('456456');
     }
 
-    public function testShouldChangePassword_legacy()
+    public function testShouldForgotPassword()
     {
-        // Make sure that the mock will have an _id
-        $confideUser      = m::mock(new _mockedUser);
-        $confideUser->_id = '123123';
-
-        // Make sure that the password reminders collection will receive a update
-        $database = $this->repo->app['MongoLidConnector'];
-
-        $database->users = $database; // The collection that should be accessed
-
-        $database->shouldReceive('update')// Should update the password of the user
-        ->with(['_id' => '123123'], ['$set' => ['password' => 'secret']])
-            ->andReturn(true)
-            ->once();
-
-        $this->repo->app['MongoLidConnector'] = $database;
-
-        // Actually change the user password
-        $this->assertTrue(
-            $this->repo->changePassword($confideUser, 'secret')
-        );
-    }
-
-    public function testShouldForgotPassword_legacy()
-    {
-        // Make sure that the mock will have an email
-        $confideUser = m::mock(new _mockedUser);
+        // Set
+        $database    = m::mock(Client::class);
+        $collection  = m::mock(Collection::class);
+        $confideUser = $this->getConfideMongoUser();
+        $repository  = $this->getRepositoryWithDatabaseInteraction($database);
 
         $confideUser->email = 'bob@sample.com';
 
-        $timeStamp = new \DateTime;
+        $reminderCollection = 'password_reminders';
 
-        // Make sure that the password reminders collection will receive an insert
-        $database = $this->repo->app['MongoLidConnector'];
+        $database->$reminderCollection = $collection;
 
-        $database->password_reminders = $database; // The collection that should be accessed
+        // Expectations
+        $collection->shouldReceive('insertOne')
+            ->once()
+            ->with(m::subset(['email' => 'bob@sample.com']))
+            ->andReturn(true);
 
-        $database->shouldReceive('insert')// Should query for the password reminders with the given token
-        ->andReturn(true)
-            ->once();
+        // Actions
+        $result = $repository->forgotPassword($confideUser);
 
-        $this->repo->app['MongoLidConnector'] = $database;
-
-        // Actually checks if the token is returned
-        $this->assertNotNull(
-            $this->repo->forgotPassword($confideUser)
-        );
+        // Assertions
+        $this->assertNotNull($result);
     }
 
-    public function testUserExists_legacy()
+    public function testUserExists()
     {
-        // Make sure that the mock will have it's attributes
-        $confideUser = m::mock(new _mockedUser);
+        // Set
+        $confideUser = $this->getConfideMongoUser();
+        $repository  = new ConfideMongoRepository;
 
         $confideUser->username = 'Bob';
         $confideUser->email    = 'bob@sample.com';
 
-        // The query should be
         $query = [
             '$or' => [
                 ['username' => $confideUser->username],
@@ -262,50 +252,61 @@ class ConfideRepositoryTest extends TestCase
             ],
         ];
 
-        // Make sure that the password reminders collection will receive a find and count
-        $database = $this->repo->app['MongoLidConnector'];
-
-        $database->users = $database; // The collection that should be accessed
-
-        $database->shouldReceive('find')// Should query for the password reminders with the given token
-        ->with($query)
-            ->andReturn($database)
+        // Expectations
+        $confideUser->shouldReceive('where')
             ->once()
-            ->getMock()->shouldReceive('count')
-            ->andReturn(1)
-            ->once();
+            ->with($query)
+            ->andReturnSelf();
 
-        $this->repo->app['MongoLidConnector'] = $database;
+        $confideUser->shouldReceive('count')
+            ->once()
+            ->andReturn(1);
 
-        // Actually checks if the user exists
-        $this->assertEquals(
-            1,
-            $this->repo->userExists($confideUser)
-        );
+        // Actions
+        $result = $repository->userExists($confideUser);
+
+        // Assertions
+        $this->assertEquals(1, $result);
     }
 
-    public function testShouldConfirmUser_legacy()
+    /* Deprecated Functions Tests */
+
+    public function testShouldChangePassword()
     {
-        // Make sure that the mock will return an id
-        $confideUser      = m::mock(new _mockedUser);
+        // Set
+        $confideUser = $this->getConfideMongoUser();
+        $repository  = new ConfideMongoRepository;
+
+        // Expectations
+        $confideUser->shouldReceive('save')
+            ->once()
+            ->andReturn(true);
+
+        // Actions
+        $result = $repository->changePassword($confideUser, 'secret');
+
+        // Assertions
+        $this->assertTrue($result);
+    }
+
+    public function testShouldConfirmUser()
+    {
+        // Set
+        $repository  = new ConfideMongoRepository;
+        $confideUser = $this->getConfideMongoUser();
+
         $confideUser->_id = '123123';
 
-        // Make sure that the password reminders collection will receive a update
-        $database = $this->repo->app['MongoLidConnector'];
+        // Expectations
+        $confideUser->shouldReceive('confirm')
+            ->once()
+            ->andReturn(true);
 
-        $database->users = $database; // The collection that should be accessed
+        // Actions
+        $result = $repository->confirmUser($confideUser);
 
-        $database->shouldReceive('update')// Should query for the password reminders with the given token
-        ->with(['_id' => '123123'], ['$set' => ['confirmed' => 1]])
-            ->andReturn(true)
-            ->once();
-
-        $this->repo->app['MongoLidConnector'] = $database;
-
-        // Actually change the user password
-        $this->assertTrue(
-            $this->repo->confirmUser($confideUser)
-        );
+        // Assertions
+        $this->assertTrue($result);
     }
 
     /**
