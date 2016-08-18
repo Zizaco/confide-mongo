@@ -11,6 +11,7 @@
     ],
     "require": {
         "php": ">=7.0",
+        "ext-mongodb": "^1.2.0",
         "illuminate/contracts": "^5.0",
         "illuminate/support": "^5.0",
         "illuminate/mail": "^5.0",

@@ -2,7 +2,7 @@
 
 use Exception;
 use Mongolid\Connection\Pool;
-use Mongolid\Serializer\Type\UTCDateTime;
+use MongoDB\BSON\UTCDateTime;
 use Zizaco\Confide\ConfideUser;
 use Zizaco\Confide\RepositoryInterface;
 
@@ -203,7 +203,7 @@ class ConfideMongoRepository implements RepositoryInterface
         $values = [
             'email'      => $user->email,
             'token'      => $token,
-            'created_at' => (new UTCDateTime())->convert(),
+            'created_at' => new UTCDateTime(),
         ];
 
         $this->database()
