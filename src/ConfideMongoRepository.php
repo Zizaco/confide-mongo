@@ -203,7 +203,7 @@ class ConfideMongoRepository implements RepositoryInterface
         $values = [
             'email'      => $user->email,
             'token'      => $token,
-            'created_at' => new UTCDateTime(),
+            'created_at' => new UTCDateTime(time()),
         ];
 
         $this->database()

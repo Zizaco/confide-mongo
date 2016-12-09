@@ -6,7 +6,7 @@ use Mockery as m;
 use MongoDB\Client;
 use MongoDB\Collection;
 
-class ConfideRepositoryTest extends TestCase
+class ConfideMongoRepositoryTest extends TestCase
 {
     /**
      * {@inheritdoc}

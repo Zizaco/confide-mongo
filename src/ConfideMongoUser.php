@@ -27,11 +27,11 @@ class ConfideMongoUser extends MongolidModel implements ConfideUserInterface
     protected $hashedAttributes = ['password'];
 
     /**
-     * Ardent validation rules
+     * Validation rules
      *
      * @var array
      */
-    public static $rules = [
+    public $rules = [
         'username'          => 'required|alpha_dash',
         'email'             => 'required|email',
         'password'          => 'required|between:4,11|confirmed',
