@@ -177,7 +177,7 @@ To change the validation rules of the User model you can take a look at [Laravel
         /**
          * Validation rules
          */
-        public static $rules = array(
+        public $rules = array(
             'email' => 'required|email',
             'password' => 'required|between:4,11|confirmed',
         );
