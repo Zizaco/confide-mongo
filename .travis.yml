@@ -1,10 +1,11 @@
 language: php
 
-php: 
+php:
   - 7.0
+  - 7.1
 
 before_script:
   - echo "extension = mongodb.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
   - composer install
 
-script: phpunit
+script: vendor/bin/phpunit
