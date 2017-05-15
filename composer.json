@@ -15,7 +15,7 @@
         "illuminate/contracts": "^5.0",
         "illuminate/support": "^5.0",
         "illuminate/mail": "^5.0",
-        "leroy-merlin-br/mongolid-laravel": "v2.0.x-dev",
+        "leroy-merlin-br/mongolid-laravel": "2.0.0-beta4",
         "zizaco/confide": "5.0.x-dev"
     },
     "require-dev": {
