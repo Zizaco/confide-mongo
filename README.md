@@ -35,13 +35,16 @@ If you are looking for user roles and permissions see [Entrust](https://github.c
 
 ### Required setup
 
-In the `require` key of `composer.json` file add the following
+**Note**: This package includes Mongolid Laravel. Use the correct tag according to your Laravel version:
 
-    "zizaco/confide-mongo": "dev-master"
+- Laravel 5.1: `^0.14`
+- Laravel 5.2: `^0.15`
 
-Run the Composer update comand
+Run composer require command to download the package.
 
-    $ composer update
+```shell
+composer require zizaco/confide-mongo
+```
 
 In your `config/app.php` add `'Zizaco\ConfideMongo\ConfideMongoServiceProvider'` to the end of the `$providers` array
 
@@ -73,7 +76,7 @@ Set the driver to _"mongoLid"_ in `config/auth.php` as stated in [MongoLid Authe
     ...
 
     'driver' => 'mongoLid',
-    
+
     ...
 ```
 
@@ -188,17 +191,17 @@ Feel free to add more fields to your collection and to the validation array. The
 
 #### Passing additional information to the make methods
 
-If you want to pass additional parameters to the forms, you can use an alternate syntax to achieve this. 
+If you want to pass additional parameters to the forms, you can use an alternate syntax to achieve this.
 
 Instead of using the make method:
-    
+
     Confide::makeResetPasswordForm( $token ):
 
 You would use:
 
     View::make(Config::get('confide::reset_password_form'))
         ->with('token', $token);
-        
+
 It produces the same output, but you would be able to add more inputs using 'with' just like any other view.
 
 #### RESTful controller
@@ -212,7 +215,7 @@ Will result in a [RESTful controller](https://github.com/laravel/docs/blob/maste
 Then, when dumping the routes, you should use the --restful option to match the existing controller.
 
     $ php artisan confide:routes --restful
-    
+
 #### User roles and permissions
 
 In order not to bloat Confide with not related features, the role and permission was developed as another package: [Entrust](https://github.com/Zizaco/entrust). This package couples very well with Confide.
@@ -241,7 +244,7 @@ When defining your filter you should set the `'loginRedirect'` session variable.
 
     // Only authenticated users will be able to access routes that begins with
     // 'admin'. Ex: 'admin/posts', 'admin/categories'.
-    Route::when('admin*', 'auth'); 
+    Route::when('admin*', 'auth');
 
 or, if you are using [Entrust](https://github.com/Zizaco/entrust) ;)
 
@@ -251,7 +254,7 @@ or, if you are using [Entrust](https://github.com/Zizaco/entrust) ;)
         Session::put( 'loginRedirect', Request::url() );
         return Redirect::to( 'user/login' );
     } );
-    
+
 #### Validating a route
 
 If you want to validate whether a route exists, the `Confide::checkAction` function is what you are looking for.
