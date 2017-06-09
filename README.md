@@ -5,7 +5,7 @@
 [![Build Status](https://api.travis-ci.org/Zizaco/confide-mongo.png)](https://travis-ci.org/Zizaco/confide-mongo)
 [![ProjectStatus](http://stillmaintained.com/Zizaco/confide-mongo.png)](http://stillmaintained.com/Zizaco/confide-mongo)
 
-Confide is a authentication solution for **Laravel5** using [MongoLid](https://github.com/Zizaco/mongolid-laravel) made to eliminate repetitive tasks involving the management of users: Account creation, login, logout, confirmation by e-mail, password reset, etc.
+Confide is a authentication solution for **Laravel5** using [MongoLid](https://github.com/leroy-merlin-br/mongolid-laravel) made to eliminate repetitive tasks involving the management of users: Account creation, login, logout, confirmation by e-mail, password reset, etc.
 
 Confide aims to be simple to use, quick to configure and flexible.
 
@@ -39,6 +39,8 @@ If you are looking for user roles and permissions see [Entrust](https://github.c
 
 - Laravel 5.1: `^0.14`
 - Laravel 5.2: `^0.15`
+- Laravel 5.3: `^0.15`
+- Laravel 5.4: `^0.16`
 
 Run composer require command to download the package.
 
@@ -70,14 +72,23 @@ At the end of `config/app.php` add `'Confide'    => 'Zizaco\Confide\ConfideFacad
 
 ### Configuration
 
-Set the driver to _"mongoLid"_ in `config/auth.php` as stated in [MongoLid Authentication](https://github.com/Zizaco/mongolid-laravel#authentication):
+Set the user provider driver to _"mongolid"_ in `config/auth.php` as stated in [MongoLid Authentication](https://github.com/leroy-merlin-br/mongolid-laravel#authentication):
 
 ```php
-    ...
 
-    'driver' => 'mongoLid',
+    'providers' => [
 
-    ...
+        // ...
+
+        'users' => [
+            'driver' => 'mongolid',
+            'model' => \App\User::class
+        ],
+
+        // ...
+
+    ],
+
 ```
 
 This values contained in `config/auth.php` will be used by Confide Mongo to generate the controllers and routes.
@@ -232,13 +243,13 @@ When defining your filter you should set the `'loginRedirect'` session variable.
 
     Route::filter('auth', function()
     {
-        if ( Auth::guest() ) // If the user is not logged in
+        if (Auth::guest()) // If the user is not logged in
         {
             // Set the loginRedirect session variable
-            Session::put( 'loginRedirect', Request::url() );
+            Session::put('loginRedirect', Request::url());
 
             // Redirect back to user login
-            return Redirect::to( 'user/login' );
+            return Redirect::to('user/login');
         }
     });
 
