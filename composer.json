@@ -9,12 +9,6 @@
             "email": "zizaco@gmail.com"
         }
     ],
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/leroy-merlin-br/confide"
-        }
-    ],
     "require": {
         "php": ">=7.2",
         "ext-mongodb": "^1.2.0",
