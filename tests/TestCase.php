@@ -2,17 +2,21 @@
 namespace Zizaco\ConfideMongo;
 
 use Illuminate\Container\Container;
-use PHPUnit_Framework_TestCase;
+use Mockery as m;
+use PHPUnit\Framework\TestCase as BaseTestCase;
 use ReflectionClass;
 use ReflectionMethod;
 
-abstract class TestCase extends PHPUnit_Framework_TestCase
+abstract class TestCase extends BaseTestCase
 {
     /**
      * {@inheritdoc}
      */
-    public function tearDown()
+    protected function tearDown(): void
     {
+        $this->addToAssertionCount(m::getContainer()->mockery_getExpectationCount());
+
+        m::close();
         Container::setInstance(new Container);
     }
 
@@ -61,15 +65,15 @@ abstract class TestCase extends PHPUnit_Framework_TestCase
 
     /**
      * Set an instance on IoC Container.
-     * 
+     *
      * @param array|string  $abstract IoC binding to be used
-     * @param Object|string $concrete Concrete Object to be used 
+     * @param Object|string $concrete Concrete Object to be used
      */
     protected function setInstance($abstract, $concrete)
     {
         $container = Container::getInstance();
         $container->instance($abstract, $concrete);
-        
+
         Container::setInstance($container);
     }
 }

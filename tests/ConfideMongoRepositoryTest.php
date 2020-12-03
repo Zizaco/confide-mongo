@@ -8,16 +8,6 @@ use MongoDB\Collection;
 
 class ConfideMongoRepositoryTest extends TestCase
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function tearDown()
-    {
-        m::close();
-
-        parent::tearDown();
-    }
-
     public function testGetModel()
     {
         // Set
